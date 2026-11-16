@@ -21,8 +21,8 @@ describe("HomePage strict minimalism with shadcn/ui", () => {
   });
 });
 
-describe("PaperCreator shadcn/ui components & Interactive Flow", () => {
-  it("renders shadcn/ui controls, accessible fieldsets, alerts, and live preview", () => {
+describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
+  it("renders Basics tab controls, accessible fieldsets, alerts, and live preview", () => {
     render(<PaperCreator />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Create Paper" })).toBeInTheDocument();
@@ -49,14 +49,16 @@ describe("PaperCreator shadcn/ui components & Interactive Flow", () => {
     expect(screen.getByLabelText(/Line Spacing \(in\)/i)).toBeInTheDocument();
   });
 
-  it("expands accordion sections, validates page count, and disables exports", () => {
+  it("switches to Layout tab, validates page count, and disables exports", () => {
     render(<PaperCreator />);
 
-    const pagesTrigger = screen.getByRole("button", { name: /Pages, Duplex & Saved Settings/i });
-    fireEvent.click(pagesTrigger);
+    const layoutTab = screen.getByRole("tab", { name: "Layout" });
+    fireEvent.mouseDown(layoutTab, { button: 0 });
+    fireEvent.click(layoutTab);
 
     const pageCountInput = screen.getByLabelText(/Page Count \(1–100\)/i);
     expect(pageCountInput).toHaveAttribute("data-slot", "input");
+    fireEvent.focus(pageCountInput);
     fireEvent.change(pageCountInput, { target: { value: "250" } });
 
     expect(pageCountInput).toHaveAttribute("aria-invalid", "true");

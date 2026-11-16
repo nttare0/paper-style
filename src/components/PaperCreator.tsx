@@ -62,6 +62,7 @@ export function PaperCreator() {
 
   const activeTemplate = getTemplateSpec(settings.paperType);
   const activeSize = PAPER_SIZES.find((s) => s.id === settings.paperSize);
+  const activeSizeName = activeSize ? activeSize.label.split(" (")[0] : settings.paperSize;
 
   const handleSettingsChange = (next: PaperSettings, message?: string) => {
     setSettings(next);
@@ -126,28 +127,28 @@ export function PaperCreator() {
       </div>
 
       <header className="no-print sticky top-0 z-30 border-b bg-background/95 backdrop-blur-xs">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="mx-auto flex max-w-[1260px] flex-wrap items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
+          <div className="flex flex-wrap items-center gap-2.5">
             <Button asChild variant="outline" size="sm">
               <a href="/">
                 <ArrowLeft aria-hidden="true" />
                 <span>PaperStyle</span>
               </a>
             </Button>
-            <Separator orientation="vertical" className="hidden h-5 sm:block" />
-            <h1 className="text-lg font-bold tracking-tight sm:text-xl">Create Paper</h1>
+            <Separator orientation="vertical" className="hidden h-4 sm:block" />
+            <h1 className="text-base font-bold tracking-tight sm:text-lg">Create Paper</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary">{activeTemplate.name}</Badge>
-            <Badge variant="outline">{activeSize?.label ?? settings.paperSize}</Badge>
+            <Badge variant="outline">{activeSizeName}</Badge>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1440px] space-y-4 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1260px] space-y-3 p-4 sm:px-6 sm:py-4">
         {hasErrors && (
-          <Alert variant="destructive" className="no-print">
+          <Alert variant="destructive" className="no-print py-2.5">
             <AlertTriangle aria-hidden="true" />
             <AlertDescription>
               <strong>Fix invalid values before exporting:</strong> {errorList.join(" ")}
@@ -159,7 +160,7 @@ export function PaperCreator() {
           <Alert
             variant={feedback.type === "error" ? "destructive" : "success"}
             role="status"
-            className="no-print"
+            className="no-print py-2.5"
           >
             {feedback.type === "error" ? (
               <AlertTriangle aria-hidden="true" />
@@ -170,7 +171,7 @@ export function PaperCreator() {
           </Alert>
         )}
 
-        <div className="flex flex-col items-start gap-6 lg:flex-row">
+        <div className="flex flex-col items-start gap-5 lg:flex-row">
           <ControlPanel
             settings={settings}
             errors={errors}
@@ -203,7 +204,6 @@ export function PaperCreator() {
             onExportDocx={() =>
               runExport("docx", () => exportDocxFile(settings), "Exported Word DOCX.")
             }
-            onPrint={() => window.print()}
           />
         </div>
       </div>

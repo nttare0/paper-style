@@ -102,6 +102,13 @@
     margin: 0 !important;
   }
 
+  .print-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
   .print-stage {
     border: none !important;
     background: transparent !important;
@@ -113,5 +120,16 @@
   .sheet-preview-frame {
     box-shadow: none !important;
     border: none !important;
+    max-width: none !important;
+  }
+
+  .print-page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-page-break:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
 }
