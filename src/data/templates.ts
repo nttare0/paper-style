@@ -722,6 +722,7 @@ export const DEFAULT_PAPER_SETTINGS: PaperSettings = {
   showPageNumber: false,
   doubleSided: false,
   pageNotes: {},
+  pageTextBlocks: {},
   inkColor: "#1E293B",
   inkFontScale: 1,
 };

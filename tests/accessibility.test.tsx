@@ -85,42 +85,51 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(screen.getByRole("button", { name: /Export PDF/i })).toBeDisabled();
   });
 
-  it("opens full-screen paper-only edit mode, hides studio chrome, and saves typed text back to SVG", () => {
+  it("opens full-screen paper-only edit mode cleanly for both single-flow and structured paper types", () => {
     render(<PaperCreator />);
 
-    // Switch to Cornell Notes first, then toggle Edit Sheet
-    const templateSelect = screen.getByLabelText("Paper Type") as HTMLSelectElement;
-    fireEvent.change(templateSelect, { target: { value: "cornell-notes" } });
+    // 1. Default Lined Paper auto-opens an immediately focused text block on Edit Sheet
+    fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
 
-    const editBtn = screen.getByRole("button", { name: /Edit Sheet/i });
-    fireEvent.click(editBtn);
-
-    // Full-screen paper editor opens, studio header & control panel are hidden, body scroll locked
-    const dialog = screen.getByRole("dialog", { name: /Full-screen paper editor: Cornell Notes/i });
+    const dialog = screen.getByRole("dialog", { name: /Full-screen paper editor: Lined Paper/i });
     expect(dialog).toHaveClass("fixed", "inset-0", "z-50");
     expect(document.body.style.overflow).toBe("hidden");
     expect(document.querySelector("header")).toHaveClass("hidden");
     expect(document.getElementById("controls-panel")?.parentElement).toHaveClass("hidden");
 
-    const editor = screen.getByLabelText(/Edit text on Cornell Notes, page 1/i);
-    expect(editor).toBeInTheDocument();
-    fireEvent.change(editor, { target: { value: "Lecture 1: Key Takeaways" } });
-
-    // Switch ink color to Royal blue ink, then click Done
-    fireEvent.click(screen.getByRole("button", { name: "Royal blue ink" }));
+    const linedEditor = screen.getByLabelText(/Edit text on Lined Paper, page 1/i);
+    expect(linedEditor).toBeInTheDocument();
+    fireEvent.change(linedEditor, { target: { value: "Line 1 quick note" } });
     fireEvent.click(screen.getByRole("button", { name: /Done/i }));
 
-    // Restores studio view & persists typed SVG text into Cornell NOTES column
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(document.body.style.overflow).toBe("");
     expect(document.querySelector("header")).not.toHaveClass("hidden");
+    expect(
+      screen.getByRole("img", { name: /Live preview of Lined Paper/i }).innerHTML,
+    ).toContain("Line 1 quick note");
 
-    const previewImg = screen.getByRole("img", { name: /Live preview of Cornell Notes/i });
-    expect(previewImg.innerHTML).toContain("Lecture 1: Key Takeaways");
-    expect(previewImg.innerHTML).toContain("#1D4ED8");
-    expect(previewImg.innerHTML).toMatch(/<text x="71" y="50\.\d+" fill="#1D4ED8"[^>]*>Lecture 1: Key Takeaways<\/text>/);
+    // 2. Switch to Weekly Planner: clicking anywhere on the paper opens a cursor right there
+    const templateSelect = screen.getByLabelText("Paper Type") as HTMLSelectElement;
+    fireEvent.change(templateSelect, { target: { value: "weekly-planner" } });
+    fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
 
-    // Also verifies Escape exits full-screen edit mode cleanly
+    const plannerDialog = screen.getByRole("dialog", {
+      name: /Full-screen paper editor: Weekly Planner/i,
+    });
+    const sheetFrame = plannerDialog.querySelector(".sheet-preview-frame") as HTMLElement;
+    fireEvent.click(sheetFrame);
+
+    const plannerEditor = screen.getByLabelText(/Edit text on Weekly Planner, page 1/i);
+    fireEvent.change(plannerEditor, { target: { value: "Ship PaperStyle" } });
+    fireEvent.click(screen.getByRole("button", { name: "Royal blue ink" }));
+    fireEvent.click(screen.getByRole("button", { name: /Done/i }));
+
+    const plannerPreview = screen.getByRole("img", { name: /Live preview of Weekly Planner/i });
+    expect(plannerPreview.innerHTML).toContain("Ship PaperStyle");
+    expect(plannerPreview.innerHTML).toContain("#1D4ED8");
+
+    // 3. Escape exits full-screen edit mode cleanly
     fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     fireEvent.keyDown(window, { key: "Escape" });

@@ -9,7 +9,12 @@ import {
 import { renderBackgroundPattern } from "./patterns";
 import { renderPaperTypeContent } from "./renderers";
 import { fmt, sanitizeHexColor, sanitizeImageDataUrl, svgCircle, svgLine, svgRect, svgText } from "./svgHelpers";
-import { computeWritingLayout, renderSheetNotesSvg, type WritingLayout } from "./writingBox";
+import {
+  computeWritingLayout,
+  renderSheetBlocksSvg,
+  renderSheetNotesSvg,
+  type WritingLayout,
+} from "./writingBox";
 
 export interface BuiltSheetResult {
   svg: string;
@@ -23,7 +28,7 @@ export interface BuiltSheetResult {
 export function buildSheetSvg(
   settings: PaperSettings,
   pageNumber = 1,
-  options?: { hidePageNotes?: boolean },
+  options?: { hidePageNotes?: boolean; hideBlockId?: string },
 ): BuiltSheetResult {
   const geom = computeSheetGeometry(settings, pageNumber);
   const theme = getThemeSpec(settings.theme);
@@ -179,9 +184,11 @@ export function buildSheetSvg(
     );
   }
 
-  // 9. Optional User Notes typed directly on the sheet
+  // 9. Optional User Notes & Click-Anywhere Text Blocks typed directly on the sheet
   const writingLayout = computeWritingLayout(settings, geom);
-  const pageNote = settings.pageNotes?.[String(pageNumber)] ?? "";
+  const pageKey = String(pageNumber);
+  const pageNote = settings.pageNotes?.[pageKey] ?? "";
+  const pageBlocks = settings.pageTextBlocks?.[pageKey] ?? [];
   if (!options?.hidePageNotes && pageNote.trim().length > 0) {
     const resolvedInk = resolvePrintColor(
       sanitizeHexColor(settings.inkColor || "#1E293B", "#1E293B"),
@@ -189,6 +196,9 @@ export function buildSheetSvg(
       settings.printerType,
     );
     parts.push(renderSheetNotesSvg(pageNote, writingLayout, resolvedInk));
+  }
+  if (!options?.hidePageNotes && pageBlocks.length > 0) {
+    parts.push(renderSheetBlocksSvg(pageBlocks, settings, geom, options?.hideBlockId));
   }
 
   // 10. Optional Page Number

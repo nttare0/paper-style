@@ -159,6 +159,16 @@ export interface MarginsMm {
   left: number;
 }
 
+export interface SheetTextBlock {
+  id: string;
+  xMm: number;
+  yMm: number;
+  widthMm: number;
+  text: string;
+  color?: string;
+  fontScale?: number;
+}
+
 export interface PaperSettings {
   version: 1;
   printerType: PrinterType;
@@ -202,6 +212,7 @@ export interface PaperSettings {
   showPageNumber: boolean;
   doubleSided: boolean;
   pageNotes: Record<string, string>;
+  pageTextBlocks: Record<string, SheetTextBlock[]>;
   inkColor: string;
   inkFontScale: number;
 }

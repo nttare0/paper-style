@@ -37,6 +37,10 @@ function loadInitialSettings(): PaperSettings {
         ...DEFAULT_PAPER_SETTINGS.pageNotes,
         ...(parsed.pageNotes ?? {}),
       },
+      pageTextBlocks: {
+        ...DEFAULT_PAPER_SETTINGS.pageTextBlocks,
+        ...(parsed.pageTextBlocks ?? {}),
+      },
     };
   } catch {
     return DEFAULT_PAPER_SETTINGS;

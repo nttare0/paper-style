@@ -175,6 +175,41 @@ export function parseImportedSettingsJson(
     }
     merged.pageNotes = notes;
   }
+  if (
+    typeof obj.pageTextBlocks === "object" &&
+    obj.pageTextBlocks !== null &&
+    !Array.isArray(obj.pageTextBlocks)
+  ) {
+    const validBlocks: PaperSettings["pageTextBlocks"] = {};
+    for (const [k, arr] of Object.entries(obj.pageTextBlocks as Record<string, unknown>)) {
+      if (!/^\d+$/.test(k) || !Array.isArray(arr)) continue;
+      validBlocks[k] = arr
+        .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+        .filter(
+          (b) =>
+            typeof b.id === "string" &&
+            typeof b.xMm === "number" &&
+            Number.isFinite(b.xMm) &&
+            typeof b.yMm === "number" &&
+            Number.isFinite(b.yMm) &&
+            typeof b.widthMm === "number" &&
+            Number.isFinite(b.widthMm) &&
+            typeof b.text === "string",
+        )
+        .map((b) => ({
+          id: b.id as string,
+          xMm: b.xMm as number,
+          yMm: b.yMm as number,
+          widthMm: b.widthMm as number,
+          text: b.text as string,
+          ...(typeof b.color === "string" ? { color: b.color } : {}),
+          ...(typeof b.fontScale === "number" && Number.isFinite(b.fontScale)
+            ? { fontScale: Math.max(0.75, Math.min(1.4, b.fontScale)) }
+            : {}),
+        }));
+    }
+    merged.pageTextBlocks = validBlocks;
+  }
 
   return { ok: true, settings: merged };
 }
@@ -305,11 +340,16 @@ export async function createDocxDocumentBlob(
   const pageWidthPx = Math.round((widthMm / MM_PER_INCH) * 96);
   const pageHeightPx = Math.round((heightMm / MM_PER_INCH) * 96);
 
-  // Cache rendered PNGs for identical pages when page numbers aren't drawn
+  // Cache rendered PNGs for identical pages only when no page-specific text/numbers exist
+  const hasPerPageText =
+    Object.entries(settings.pageNotes ?? {}).some(([k, v]) => k !== "1" && v.trim().length > 0) ||
+    Object.entries(settings.pageTextBlocks ?? {}).some(
+      ([k, list]) => k !== "1" && list.some((b) => b.text.trim().length > 0),
+    );
   const frontSheet = buildSheetSvg(settings, 1);
   const frontPng = await rasterizeSvgToPng(frontSheet.svg, widthMm, heightMm, 200);
   let backPng: Awaited<ReturnType<typeof rasterizeSvgToPng>> | null = null;
-  if (settings.doubleSided && !settings.showPageNumber && totalPages > 1) {
+  if (settings.doubleSided && !settings.showPageNumber && !hasPerPageText && totalPages > 1) {
     const backSheet = buildSheetSvg(settings, 2);
     backPng = await rasterizeSvgToPng(backSheet.svg, widthMm, heightMm, 200);
   }
@@ -317,7 +357,7 @@ export async function createDocxDocumentBlob(
   const sections = [];
   for (let p = 1; p <= totalPages; p++) {
     let pngData: Uint8Array;
-    if (settings.showPageNumber) {
+    if (settings.showPageNumber || hasPerPageText) {
       const sheet = buildSheetSvg(settings, p);
       const rendered = await rasterizeSvgToPng(sheet.svg, widthMm, heightMm, 200);
       pngData = rendered.buffer;
