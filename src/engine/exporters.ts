@@ -210,6 +210,18 @@ export function parseImportedSettingsJson(
     }
     merged.pageTextBlocks = validBlocks;
   }
+  if (typeof obj.pageFields === "object" && obj.pageFields !== null && !Array.isArray(obj.pageFields)) {
+    const validFields: PaperSettings["pageFields"] = {};
+    for (const [k, map] of Object.entries(obj.pageFields as Record<string, unknown>)) {
+      if (!/^\d+$/.test(k) || typeof map !== "object" || map === null || Array.isArray(map)) continue;
+      const cleanMap: Record<string, string> = {};
+      for (const [fid, val] of Object.entries(map as Record<string, unknown>)) {
+        if (typeof val === "string") cleanMap[fid] = val;
+      }
+      validFields[k] = cleanMap;
+    }
+    merged.pageFields = validFields;
+  }
 
   return { ok: true, settings: merged };
 }
@@ -343,6 +355,9 @@ export async function createDocxDocumentBlob(
   // Cache rendered PNGs for identical pages only when no page-specific text/numbers exist
   const hasPerPageText =
     Object.entries(settings.pageNotes ?? {}).some(([k, v]) => k !== "1" && v.trim().length > 0) ||
+    Object.entries(settings.pageFields ?? {}).some(
+      ([k, map]) => k !== "1" && Object.values(map).some((v) => v.trim().length > 0),
+    ) ||
     Object.entries(settings.pageTextBlocks ?? {}).some(
       ([k, list]) => k !== "1" && list.some((b) => b.text.trim().length > 0),
     );

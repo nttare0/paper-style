@@ -85,10 +85,10 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(screen.getByRole("button", { name: /Export PDF/i })).toBeDisabled();
   });
 
-  it("opens full-screen paper-only edit mode cleanly for both single-flow and structured paper types", () => {
+  it("opens full-screen paper-only edit mode with structured boxes on planners and click-anywhere on free sheets", () => {
     render(<PaperCreator />);
 
-    // 1. Default Lined Paper auto-opens an immediately focused text block on Edit Sheet
+    // 1. Default Lined Paper auto-opens full-screen with Date & Lined Paper fields ready to type
     fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
 
     const dialog = screen.getByRole("dialog", { name: /Full-screen paper editor: Lined Paper/i });
@@ -97,42 +97,55 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(document.querySelector("header")).toHaveClass("hidden");
     expect(document.getElementById("controls-panel")?.parentElement).toHaveClass("hidden");
 
-    const linedEditor = screen.getByLabelText(/Edit text on Lined Paper, page 1/i);
-    expect(linedEditor).toBeInTheDocument();
-    fireEvent.change(linedEditor, { target: { value: "Line 1 quick note" } });
+    fireEvent.change(screen.getByLabelText(/Date, page 1/i), { target: { value: "Nov 16" } });
+    fireEvent.change(screen.getByLabelText(/Lined Paper, page 1/i), {
+      target: { value: "Line 1 quick note" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Done/i }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(document.body.style.overflow).toBe("");
     expect(document.querySelector("header")).not.toHaveClass("hidden");
-    expect(
-      screen.getByRole("img", { name: /Live preview of Lined Paper/i }).innerHTML,
-    ).toContain("Line 1 quick note");
+    const linedPreview = screen.getByRole("img", { name: /Live preview of Lined Paper/i }).innerHTML;
+    expect(linedPreview).toContain("Nov 16");
+    expect(linedPreview).toContain("Line 1 quick note");
 
-    // 2. Switch to Weekly Planner: clicking anywhere on the paper opens a cursor right there
+    // 2. Weekly Planner displays natural day boxes (Monday..Sunday, Weekly Notes) ready to click/Tab
     const templateSelect = screen.getByLabelText("Paper Type") as HTMLSelectElement;
     fireEvent.change(templateSelect, { target: { value: "weekly-planner" } });
     fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
 
-    const plannerDialog = screen.getByRole("dialog", {
-      name: /Full-screen paper editor: Weekly Planner/i,
+    fireEvent.change(screen.getByLabelText(/Monday, page 1/i), {
+      target: { value: "Team standup" },
     });
-    const sheetFrame = plannerDialog.querySelector(".sheet-preview-frame") as HTMLElement;
-    fireEvent.click(sheetFrame);
-
-    const plannerEditor = screen.getByLabelText(/Edit text on Weekly Planner, page 1/i);
-    fireEvent.change(plannerEditor, { target: { value: "Ship PaperStyle" } });
+    fireEvent.change(screen.getByLabelText(/Friday, page 1/i), {
+      target: { value: "Ship release" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Royal blue ink" }));
     fireEvent.click(screen.getByRole("button", { name: /Done/i }));
 
     const plannerPreview = screen.getByRole("img", { name: /Live preview of Weekly Planner/i });
-    expect(plannerPreview.innerHTML).toContain("Ship PaperStyle");
+    expect(plannerPreview.innerHTML).toContain("Team standup");
+    expect(plannerPreview.innerHTML).toContain("Ship release");
     expect(plannerPreview.innerHTML).toContain("#1D4ED8");
 
-    // 3. Escape exits full-screen edit mode cleanly
+    // 3. Music Paper (free-click template) supports clicking anywhere on the sheet to add a label
+    fireEvent.change(templateSelect, { target: { value: "music" } });
     fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    const musicDialog = screen.getByRole("dialog", {
+      name: /Full-screen paper editor: Music Paper/i,
+    });
+    const sheetFrame = musicDialog.querySelector(".sheet-preview-frame") as HTMLElement;
+    fireEvent.click(sheetFrame);
+
+    fireEvent.change(screen.getByLabelText(/Note on Music Paper, page 1/i), {
+      target: { value: "Prelude in C" },
+    });
     fireEvent.keyDown(window, { key: "Escape" });
+
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: /Live preview of Music Paper/i }).innerHTML,
+    ).toContain("Prelude in C");
   });
 });

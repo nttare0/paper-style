@@ -18,6 +18,7 @@ describe("Settings persistence & document exporters", () => {
       doubleSided: true,
       pageCount: 5,
       pageNotes: { "1": "Meeting notes & actions" },
+      pageFields: { "1": { topic: "Q4 Review", notes: "Action plan" } },
       pageTextBlocks: {
         "2": [{ id: "b1", xMm: 20, yMm: 40, widthMm: 80, text: "Page 2 block", color: "#15803D" }],
       },
@@ -35,6 +36,7 @@ describe("Settings persistence & document exporters", () => {
       expect(parsed.settings.doubleSided).toBe(true);
       expect(parsed.settings.pageCount).toBe(5);
       expect(parsed.settings.pageNotes["1"]).toBe("Meeting notes & actions");
+      expect(parsed.settings.pageFields["1"]?.topic).toBe("Q4 Review");
       expect(parsed.settings.pageTextBlocks["2"]?.[0]?.text).toBe("Page 2 block");
       expect(parsed.settings.inkColor).toBe("#1D4ED8");
       expect(parsed.settings.inkFontScale).toBe(1.2);

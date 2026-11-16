@@ -213,6 +213,7 @@ export interface PaperSettings {
   doubleSided: boolean;
   pageNotes: Record<string, string>;
   pageTextBlocks: Record<string, SheetTextBlock[]>;
+  pageFields: Record<string, Record<string, string>>;
   inkColor: string;
   inkFontScale: number;
 }

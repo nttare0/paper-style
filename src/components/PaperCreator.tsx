@@ -41,6 +41,10 @@ function loadInitialSettings(): PaperSettings {
         ...DEFAULT_PAPER_SETTINGS.pageTextBlocks,
         ...(parsed.pageTextBlocks ?? {}),
       },
+      pageFields: {
+        ...DEFAULT_PAPER_SETTINGS.pageFields,
+        ...(parsed.pageFields ?? {}),
+      },
     };
   } catch {
     return DEFAULT_PAPER_SETTINGS;

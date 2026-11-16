@@ -8,10 +8,12 @@ import {
 } from "./geometry";
 import { renderBackgroundPattern } from "./patterns";
 import { renderPaperTypeContent } from "./renderers";
+import { getSheetFields, type SheetField } from "./sheetFields";
 import { fmt, sanitizeHexColor, sanitizeImageDataUrl, svgCircle, svgLine, svgRect, svgText } from "./svgHelpers";
 import {
   computeWritingLayout,
   renderSheetBlocksSvg,
+  renderSheetFieldsSvg,
   renderSheetNotesSvg,
   type WritingLayout,
 } from "./writingBox";
@@ -20,6 +22,7 @@ export interface BuiltSheetResult {
   svg: string;
   geometry: SheetLayoutGeometry;
   writingLayout: WritingLayout;
+  fields: SheetField[];
   fittedStepMm: number;
   fittedRows: number;
   fittedCols: number;
@@ -28,7 +31,7 @@ export interface BuiltSheetResult {
 export function buildSheetSvg(
   settings: PaperSettings,
   pageNumber = 1,
-  options?: { hidePageNotes?: boolean; hideBlockId?: string },
+  options?: { hidePageNotes?: boolean; hideFieldId?: string; hideBlockId?: string },
 ): BuiltSheetResult {
   const geom = computeSheetGeometry(settings, pageNumber);
   const theme = getThemeSpec(settings.theme);
@@ -184,10 +187,12 @@ export function buildSheetSvg(
     );
   }
 
-  // 9. Optional User Notes & Click-Anywhere Text Blocks typed directly on the sheet
+  // 9. Optional User Notes, Template Fields, & Click-Anywhere Blocks typed directly on the sheet
   const writingLayout = computeWritingLayout(settings, geom);
+  const fields = getSheetFields(settings, geom);
   const pageKey = String(pageNumber);
   const pageNote = settings.pageNotes?.[pageKey] ?? "";
+  const pageFieldValues = settings.pageFields?.[pageKey] ?? {};
   const pageBlocks = settings.pageTextBlocks?.[pageKey] ?? [];
   if (!options?.hidePageNotes && pageNote.trim().length > 0) {
     const resolvedInk = resolvePrintColor(
@@ -196,6 +201,11 @@ export function buildSheetSvg(
       settings.printerType,
     );
     parts.push(renderSheetNotesSvg(pageNote, writingLayout, resolvedInk));
+  }
+  if (!options?.hidePageNotes && fields.length > 0) {
+    parts.push(
+      renderSheetFieldsSvg(fields, pageFieldValues, settings, options?.hideFieldId),
+    );
   }
   if (!options?.hidePageNotes && pageBlocks.length > 0) {
     parts.push(renderSheetBlocksSvg(pageBlocks, settings, geom, options?.hideBlockId));
@@ -243,6 +253,7 @@ export function buildSheetSvg(
     svg,
     geometry: geom,
     writingLayout,
+    fields,
     fittedStepMm: rowMetrics.stepMm,
     fittedRows: rowMetrics.count,
     fittedCols: colMetrics.count,

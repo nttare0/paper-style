@@ -7,7 +7,6 @@ import {
   Eraser,
   FileDown,
   FileText,
-  GripVertical,
   Image as ImageIcon,
   PenLine,
   Printer,
@@ -29,6 +28,7 @@ import { buildSheetSvg } from "@/engine/buildSheetSvg";
 import { sanitizeHexColor } from "@/engine/svgHelpers";
 import {
   computeBlockMetrics,
+  computeFontMetricsForStep,
   createBlockAtPoint,
   isSingleFlowPaperType,
 } from "@/engine/writingBox";
@@ -84,163 +84,143 @@ export function PaperPreview({
   const [printAllPages, setPrintAllPages] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+  const [pendingFocusFieldId, setPendingFocusFieldId] = useState<string | null>(null);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sheetFrameRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{
-    mode: "move" | "resize";
-    blockId: string;
-    startClientX: number;
-    startClientY: number;
-    startXMm: number;
-    startYMm: number;
-    startWidthMm: number;
-  } | null>(null);
+  const fieldRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
+  const blockTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const totalPages = Math.max(1, Math.min(100, Math.round(settings.pageCount)));
   const safePage = Math.min(Math.max(1, pageIndex), totalPages);
   const pageKey = String(safePage);
 
+  const pageFieldValues = settings.pageFields?.[pageKey] ?? {};
   const pageBlocks = settings.pageTextBlocks?.[pageKey] ?? [];
   const legacyNote = settings.pageNotes?.[pageKey] ?? "";
+
   const hasAnyNotesOnPage =
-    legacyNote.trim().length > 0 || pageBlocks.some((b) => b.text.trim().length > 0);
+    legacyNote.trim().length > 0 ||
+    Object.values(pageFieldValues).some((v) => v.trim().length > 0) ||
+    pageBlocks.some((b) => b.text.trim().length > 0);
 
   const tpl = getTemplateSpec(settings.paperType);
   const sizeSpec = PAPER_SIZES.find((s) => s.id === settings.paperSize);
   const sizeName = sizeSpec ? sizeSpec.label.split(" (")[0] : settings.paperSize;
 
-  const { svg, geometry, writingLayout, fittedStepMm, fittedRows } = buildSheetSvg(
+  const { svg, geometry, fields, fittedStepMm, fittedRows } = buildSheetSvg(
     settings,
     safePage,
     {
-      hidePageNotes: isEditing && !isPrinting && pageBlocks.length === 0 && legacyNote.length > 0,
-      hideBlockId: isEditing && !isPrinting ? (activeBlockId ?? undefined) : undefined,
+      hidePageNotes: isEditing && !isPrinting,
     },
   );
 
-  const activeBlock = pageBlocks.find((b) => b.id === activeBlockId) ?? null;
+  // Fields beyond optional "date" mean this template has structured fields
+  const templateBodyFields = fields.filter((f) => f.id !== "date");
+  const supportsFreeClick = templateBodyFields.length === 0;
+  const showFieldOutlines = templateBodyFields.length > 1;
 
-  const commitPageBlocks = useCallback(
-    (
-      nextBlocks: SheetTextBlock[],
-      extra?: Partial<PaperSettings>,
-      announcement?: string,
-    ) => {
-      const cleaned = nextBlocks.filter((b) => b.text.length > 0 || b.id === activeBlockId);
-      const nextMap = { ...(settings.pageTextBlocks ?? {}) };
-      if (cleaned.length === 0) {
-        delete nextMap[pageKey];
-      } else {
-        nextMap[pageKey] = cleaned;
-      }
-      onChange(
-        {
-          ...settings,
-          ...extra,
-          pageTextBlocks: nextMap,
-        },
-        announcement,
-      );
-    },
-    [settings, pageKey, activeBlockId, onChange],
+  const resolvedInk = resolvePrintColor(
+    sanitizeHexColor(settings.inkColor || "#1E293B", "#1E293B"),
+    "text",
+    settings.printerType,
   );
 
-  const pruneEmptyAndExit = useCallback(() => {
-    const nonEmpty = (settings.pageTextBlocks?.[pageKey] ?? []).filter(
+  const exitEditMode = useCallback(() => {
+    const nonEmptyBlocks = (settings.pageTextBlocks?.[pageKey] ?? []).filter(
       (b) => b.text.trim().length > 0,
     );
-    const nextMap = { ...(settings.pageTextBlocks ?? {}) };
-    if (nonEmpty.length === 0) {
-      delete nextMap[pageKey];
+    const nextBlocksMap = { ...(settings.pageTextBlocks ?? {}) };
+    if (nonEmptyBlocks.length === 0) {
+      delete nextBlocksMap[pageKey];
     } else {
-      nextMap[pageKey] = nonEmpty;
+      nextBlocksMap[pageKey] = nonEmptyBlocks;
     }
     setActiveBlockId(null);
-    onChange({ ...settings, pageTextBlocks: nextMap });
+    setPendingFocusFieldId(null);
+    onChange({ ...settings, pageTextBlocks: nextBlocksMap });
     onEditingChange(false);
   }, [settings, pageKey, onChange, onEditingChange]);
 
   const enterEditMode = useCallback(
     (clickMm?: { xMm: number; yMm: number }) => {
-      // Migrate legacy pageNote into a SheetTextBlock seamlessly if present
-      if (legacyNote.trim().length > 0 && pageBlocks.length === 0) {
-        const migrated: SheetTextBlock = {
-          id: makeBlockId(),
-          xMm: writingLayout.xMm,
-          yMm: writingLayout.yMm,
-          widthMm: writingLayout.widthMm,
-          text: legacyNote,
-        };
+      let nextSettings = settings;
+      // Migrate legacy pageNote into field "main" (or first body field) cleanly
+      if (legacyNote.trim().length > 0) {
+        const targetId = templateBodyFields[0]?.id ?? "main";
         const nextNotes = { ...(settings.pageNotes ?? {}) };
         delete nextNotes[pageKey];
-        const nextBlocksMap = {
-          ...(settings.pageTextBlocks ?? {}),
-          [pageKey]: [migrated],
+        const nextFieldsMap = {
+          ...(settings.pageFields ?? {}),
+          [pageKey]: {
+            ...(settings.pageFields?.[pageKey] ?? {}),
+            [targetId]: legacyNote,
+          },
         };
-        onChange({
+        nextSettings = {
           ...settings,
           pageNotes: nextNotes,
-          pageTextBlocks: nextBlocksMap,
-        });
-        setActiveBlockId(migrated.id);
-        onEditingChange(true);
-        return;
+          pageFields: nextFieldsMap,
+        };
+        onChange(nextSettings);
       }
 
       if (clickMm) {
-        const block = createBlockAtPoint(
-          settings,
-          geometry,
-          clickMm.xMm,
-          clickMm.yMm,
-          makeBlockId(),
+        const hitField = fields.find(
+          (f) =>
+            clickMm.xMm >= f.xMm &&
+            clickMm.xMm <= f.xMm + f.widthMm &&
+            clickMm.yMm >= f.yMm &&
+            clickMm.yMm <= f.yMm + f.heightMm,
         );
-        const nonEmpty = pageBlocks.filter((b) => b.text.trim().length > 0);
-        const nextMap = {
-          ...(settings.pageTextBlocks ?? {}),
-          [pageKey]: [...nonEmpty, block],
-        };
-        onChange({ ...settings, pageTextBlocks: nextMap });
-        setActiveBlockId(block.id);
-        onEditingChange(true);
-        return;
+        if (hitField) {
+          setPendingFocusFieldId(hitField.id);
+          onEditingChange(true);
+          return;
+        }
+        if (supportsFreeClick) {
+          const created = createBlockAtPoint(
+            nextSettings,
+            geometry,
+            clickMm.xMm,
+            clickMm.yMm,
+            makeBlockId(),
+          );
+          const nonEmpty = (nextSettings.pageTextBlocks?.[pageKey] ?? []).filter(
+            (b) => b.text.trim().length > 0,
+          );
+          onChange({
+            ...nextSettings,
+            pageTextBlocks: {
+              ...(nextSettings.pageTextBlocks ?? {}),
+              [pageKey]: [...nonEmpty, created],
+            },
+          });
+          setActiveBlockId(created.id);
+          onEditingChange(true);
+          return;
+        }
       }
 
-      if (pageBlocks.length > 0) {
+      if (isSingleFlowPaperType(settings.paperType) && templateBodyFields[0]) {
+        setPendingFocusFieldId(templateBodyFields[0].id);
+      } else if (templateBodyFields.length === 1) {
+        setPendingFocusFieldId(templateBodyFields[0]!.id);
+      } else if (supportsFreeClick && pageBlocks.length > 0) {
         setActiveBlockId(pageBlocks[0]!.id);
-        onEditingChange(true);
-        return;
       }
 
-      if (isSingleFlowPaperType(settings.paperType)) {
-        const firstBlock: SheetTextBlock = {
-          id: makeBlockId(),
-          xMm: writingLayout.xMm,
-          yMm: writingLayout.yMm,
-          widthMm: writingLayout.widthMm,
-          text: "",
-        };
-        const nextMap = {
-          ...(settings.pageTextBlocks ?? {}),
-          [pageKey]: [firstBlock],
-        };
-        onChange({ ...settings, pageTextBlocks: nextMap });
-        setActiveBlockId(firstBlock.id);
-        onEditingChange(true);
-        return;
-      }
-
-      setActiveBlockId(null);
       onEditingChange(true);
     },
     [
-      legacyNote,
-      pageBlocks,
-      writingLayout,
       settings,
+      legacyNote,
+      templateBodyFields,
+      fields,
+      supportsFreeClick,
       geometry,
       pageKey,
+      pageBlocks,
       onChange,
       onEditingChange,
     ],
@@ -271,7 +251,7 @@ export function PaperPreview({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        pruneEmptyAndExit();
+        exitEditMode();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -279,67 +259,20 @@ export function PaperPreview({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isEditing, pruneEmptyAndExit]);
-
-  useEffect(() => {
-    if (isEditing && activeBlockId) {
-      const rafId = requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-      });
-      return () => cancelAnimationFrame(rafId);
-    }
-  }, [isEditing, activeBlockId]);
+  }, [isEditing, exitEditMode]);
 
   useEffect(() => {
     if (!isEditing) return;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      const drag = dragRef.current;
-      const frame = sheetFrameRef.current;
-      if (!drag || !frame) return;
-      const rect = frame.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-
-      const dxMm = ((e.clientX - drag.startClientX) / rect.width) * geometry.widthMm;
-      const dyMm = ((e.clientY - drag.startClientY) / rect.height) * geometry.heightMm;
-
-      const updated = (settings.pageTextBlocks?.[pageKey] ?? []).map((b) => {
-        if (b.id !== drag.blockId) return b;
-        if (drag.mode === "move") {
-          const nextX = Math.max(
-            3,
-            Math.min(geometry.widthMm - Math.min(20, b.widthMm) - 3, drag.startXMm + dxMm),
-          );
-          const nextY = Math.max(3, Math.min(geometry.heightMm - 8, drag.startYMm + dyMm));
-          return {
-            ...b,
-            xMm: Number(nextX.toFixed(2)),
-            yMm: Number(nextY.toFixed(2)),
-          };
-        }
-        const maxWidth = geometry.widthMm - b.xMm - 3;
-        const nextW = Math.max(16, Math.min(maxWidth, drag.startWidthMm + dxMm));
-        return {
-          ...b,
-          widthMm: Number(nextW.toFixed(2)),
-        };
-      });
-
-      const nextMap = { ...(settings.pageTextBlocks ?? {}), [pageKey]: updated };
-      onChange({ ...settings, pageTextBlocks: nextMap });
-    };
-
-    const handlePointerUp = () => {
-      dragRef.current = null;
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [isEditing, geometry.widthMm, geometry.heightMm, settings, pageKey, onChange]);
+    if (pendingFocusFieldId) {
+      const target = fieldRefs.current[pendingFocusFieldId];
+      if (target) {
+        requestAnimationFrame(() => target.focus());
+        setPendingFocusFieldId(null);
+      }
+    } else if (activeBlockId && blockTextareaRef.current) {
+      requestAnimationFrame(() => blockTextareaRef.current?.focus());
+    }
+  }, [isEditing, pendingFocusFieldId, activeBlockId]);
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -353,12 +286,28 @@ export function PaperPreview({
     }
   };
 
+  const updateFieldValue = (fieldId: string, nextVal: string) => {
+    const pageMap = { ...(settings.pageFields?.[pageKey] ?? {}) };
+    if (nextVal.length === 0) {
+      delete pageMap[fieldId];
+    } else {
+      pageMap[fieldId] = nextVal;
+    }
+    const nextFields = { ...(settings.pageFields ?? {}) };
+    if (Object.keys(pageMap).length === 0) {
+      delete nextFields[pageKey];
+    } else {
+      nextFields[pageKey] = pageMap;
+    }
+    onChange({ ...settings, pageFields: nextFields });
+  };
+
   const clientPointToSheetMm = (clientX: number, clientY: number) => {
     const frame = sheetFrameRef.current;
     if (!frame) return null;
     const rect = frame.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) {
-      return { xMm: writingLayout.xMm, yMm: writingLayout.yMm };
+      return { xMm: geometry.contentBox.x + 2, yMm: geometry.contentBox.y + 4 };
     }
     return {
       xMm: ((clientX - rect.left) / rect.width) * geometry.widthMm,
@@ -366,21 +315,27 @@ export function PaperPreview({
     };
   };
 
-  const handleSheetClickInEditMode = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isEditing) return;
-    if ((e.target as HTMLElement).closest("textarea, button, [data-block-ui]")) {
-      return;
-    }
+  const handleFreeClickInEditMode = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isEditing || !supportsFreeClick) return;
+    if ((e.target as HTMLElement).closest("input, textarea, button")) return;
     const pt = clientPointToSheetMm(e.clientX, e.clientY);
     if (!pt) return;
 
     const nonEmpty = pageBlocks.filter((b) => b.text.trim().length > 0);
-    const created = createBlockAtPoint(settings, geometry, pt.xMm, pt.yMm, makeBlockId());
-    const nextMap = {
-      ...(settings.pageTextBlocks ?? {}),
-      [pageKey]: [...nonEmpty, created],
-    };
-    onChange({ ...settings, pageTextBlocks: nextMap });
+    const created: SheetTextBlock = createBlockAtPoint(
+      settings,
+      geometry,
+      pt.xMm,
+      pt.yMm,
+      makeBlockId(),
+    );
+    onChange({
+      ...settings,
+      pageTextBlocks: {
+        ...(settings.pageTextBlocks ?? {}),
+        [pageKey]: [...nonEmpty, created],
+      },
+    });
     setActiveBlockId(created.id);
   };
 
@@ -388,8 +343,13 @@ export function PaperPreview({
     const updated = pageBlocks.map((b) =>
       b.id === blockId ? { ...b, text: nextText } : b,
     );
-    const nextMap = { ...(settings.pageTextBlocks ?? {}), [pageKey]: updated };
-    onChange({ ...settings, pageTextBlocks: nextMap });
+    onChange({
+      ...settings,
+      pageTextBlocks: {
+        ...(settings.pageTextBlocks ?? {}),
+        [pageKey]: updated,
+      },
+    });
   };
 
   const deleteBlock = (blockId: string) => {
@@ -409,38 +369,18 @@ export function PaperPreview({
   const clearCurrentPage = () => {
     const nextNotes = { ...(settings.pageNotes ?? {}) };
     delete nextNotes[pageKey];
+    const nextFields = { ...(settings.pageFields ?? {}) };
+    delete nextFields[pageKey];
     const nextBlocks = { ...(settings.pageTextBlocks ?? {}) };
     delete nextBlocks[pageKey];
     setActiveBlockId(null);
-    onChange({ ...settings, pageNotes: nextNotes, pageTextBlocks: nextBlocks });
+    onChange({
+      ...settings,
+      pageNotes: nextNotes,
+      pageFields: nextFields,
+      pageTextBlocks: nextBlocks,
+    });
   };
-
-  const applyInkColor = (color: string, label: string) => {
-    if (activeBlockId) {
-      const updated = pageBlocks.map((b) =>
-        b.id === activeBlockId ? { ...b, color } : b,
-      );
-      commitPageBlocks(updated, { inkColor: color }, `Selected ${label}.`);
-      requestAnimationFrame(() => textareaRef.current?.focus());
-    } else {
-      onChange({ ...settings, inkColor: color }, `Selected ${label}.`);
-    }
-  };
-
-  const applyFontScale = (scale: number, name: string) => {
-    if (activeBlockId) {
-      const updated = pageBlocks.map((b) =>
-        b.id === activeBlockId ? { ...b, fontScale: scale } : b,
-      );
-      commitPageBlocks(updated, { inkFontScale: scale }, `Selected ${name}.`);
-      requestAnimationFrame(() => textareaRef.current?.focus());
-    } else {
-      onChange({ ...settings, inkFontScale: scale }, `Selected ${name}.`);
-    }
-  };
-
-  const currentInkColor = activeBlock?.color ?? settings.inkColor ?? "#1E293B";
-  const currentFontScale = activeBlock?.fontScale ?? settings.inkFontScale ?? 1;
 
   const aspectRatio = geometry.widthMm / geometry.heightMm;
   const isFit = zoom === "fit";
@@ -448,12 +388,18 @@ export function PaperPreview({
     ? undefined
     : Math.round(geometry.widthMm * (isEditing ? 3.8 : 2.8) * zoom);
 
+  const helperHint = supportsFreeClick
+    ? `${tpl.name} · Click anywhere to type`
+    : showFieldOutlines
+      ? `${tpl.name} · Click any section or press Tab`
+      : tpl.name;
+
   const sheetElement = (
     <div
       ref={sheetFrameRef}
       className={cn(
         "sheet-preview-frame relative bg-white shadow-lg ring-1 ring-black/10",
-        isEditing && "cursor-text",
+        isEditing && supportsFreeClick && "cursor-text",
       )}
       style={
         isFit
@@ -470,8 +416,8 @@ export function PaperPreview({
               aspectRatio: `${geometry.widthMm} / ${geometry.heightMm}`,
             }
       }
-      title={!isEditing ? "Double-click anywhere on the sheet to edit" : undefined}
-      onClick={isEditing ? handleSheetClickInEditMode : undefined}
+      title={!isEditing ? "Double-click sheet to edit full-screen" : undefined}
+      onClick={isEditing && supportsFreeClick ? handleFreeClickInEditMode : undefined}
       onDoubleClick={(e) => {
         if (!isEditing) {
           const pt = clientPointToSheetMm(e.clientX, e.clientY);
@@ -491,140 +437,131 @@ export function PaperPreview({
           className="no-print absolute inset-0"
           style={{ containerType: "inline-size" }}
         >
-          {pageBlocks.map((block) => {
-            const metrics = computeBlockMetrics(block, settings, geometry);
-            const blockInk = resolvePrintColor(
-              sanitizeHexColor(block.color || settings.inkColor || "#1E293B", "#1E293B"),
-              "text",
-              settings.printerType,
+          {fields.map((field) => {
+            const metrics = computeFontMetricsForStep(
+              field.stepMm,
+              settings.inkFontScale,
+              field.fontSizeMm,
             );
-            const isActive = block.id === activeBlockId;
+            const value = pageFieldValues[field.id] ?? "";
+            const baseStyle: React.CSSProperties = {
+              left: `${(field.xMm / geometry.widthMm) * 100}%`,
+              top: `${(field.yMm / geometry.heightMm) * 100}%`,
+              width: `${(field.widthMm / geometry.widthMm) * 100}%`,
+              height: `${(field.heightMm / geometry.heightMm) * 100}%`,
+              fontFamily: '"Atkinson Hyperlegible", Helvetica, Arial, sans-serif',
+              fontSize: `calc(${metrics.fontSizeMm} * 100cqi / ${geometry.widthMm})`,
+              color: resolvedInk,
+            };
 
-            if (!isActive) {
-              if (block.text.trim().length === 0) return null;
+            if (field.singleLine) {
               return (
-                <button
-                  key={block.id}
-                  type="button"
-                  data-block-ui="hit"
-                  aria-label={`Edit note: ${block.text.slice(0, 32)}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const cleaned = pageBlocks.filter(
-                      (item) => item.id === block.id || item.text.trim().length > 0,
-                    );
-                    if (cleaned.length !== pageBlocks.length) {
-                      onChange({
-                        ...settings,
-                        pageTextBlocks: {
-                          ...(settings.pageTextBlocks ?? {}),
-                          [pageKey]: cleaned,
-                        },
-                      });
-                    }
-                    setActiveBlockId(block.id);
+                <input
+                  key={field.id}
+                  ref={(el) => {
+                    fieldRefs.current[field.id] = el;
                   }}
-                  className="absolute cursor-text rounded-[2px] border border-transparent hover:border-primary/35 hover:bg-primary/5"
-                  style={{
-                    left: `${(block.xMm / geometry.widthMm) * 100}%`,
-                    top: `${(block.yMm / geometry.heightMm) * 100}%`,
-                    width: `${(block.widthMm / geometry.widthMm) * 100}%`,
-                    height: `${(metrics.heightMm / geometry.heightMm) * 100}%`,
-                  }}
+                  type="text"
+                  aria-label={`${field.label}, page ${safePage}`}
+                  placeholder={field.placeholder}
+                  value={value}
+                  onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                  className={cn(
+                    "absolute rounded-[2px] bg-transparent p-0 leading-none outline-none placeholder:text-muted-foreground/45",
+                    showFieldOutlines || field.id === "date"
+                      ? "ring-1 ring-inset ring-primary/25 hover:ring-primary/55 focus:bg-white/30 focus:ring-primary"
+                      : "focus:ring-1 focus:ring-inset focus:ring-primary/40",
+                  )}
+                  style={baseStyle}
                 />
               );
             }
 
-            const editorHeightMm = Math.max(
-              metrics.stepMm * 1.6,
-              (metrics.lineCount + 0.5) * metrics.stepMm,
-            );
-
             return (
-              <div
-                key={block.id}
-                data-block-ui="active"
-                className="absolute"
-                style={{
-                  left: `${(block.xMm / geometry.widthMm) * 100}%`,
-                  top: `${(block.yMm / geometry.heightMm) * 100}%`,
-                  width: `${(block.widthMm / geometry.widthMm) * 100}%`,
-                  height: `${(editorHeightMm / geometry.heightMm) * 100}%`,
+              <textarea
+                key={field.id}
+                ref={(el) => {
+                  fieldRefs.current[field.id] = el;
                 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="absolute -top-6 right-0 z-10 flex items-center gap-0.5 rounded-full border bg-background/95 px-1 py-0.5 shadow-xs">
-                  <button
-                    type="button"
-                    aria-label="Move text block"
-                    title="Drag to move"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      dragRef.current = {
-                        mode: "move",
-                        blockId: block.id,
-                        startClientX: e.clientX,
-                        startClientY: e.clientY,
-                        startXMm: block.xMm,
-                        startYMm: block.yMm,
-                        startWidthMm: block.widthMm,
-                      };
-                    }}
-                    className="text-muted-foreground hover:text-foreground cursor-grab rounded p-0.5 active:cursor-grabbing"
-                  >
-                    <GripVertical className="size-3.5" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Delete text block"
-                    title="Remove block"
-                    onClick={() => deleteBlock(block.id)}
-                    className="text-muted-foreground hover:text-destructive rounded p-0.5"
-                  >
-                    <X className="size-3.5" aria-hidden="true" />
-                  </button>
-                </div>
-
-                <textarea
-                  ref={textareaRef}
-                  aria-label={`Edit text on ${tpl.name}, page ${safePage}`}
-                  placeholder="Type here..."
-                  value={block.text}
-                  onChange={(e) => updateBlockText(block.id, e.target.value)}
-                  spellCheck
-                  className="h-full w-full resize-none overflow-hidden rounded-[2px] bg-white/10 p-0 outline-1 outline-dashed outline-primary/50 focus:outline-primary placeholder:text-muted-foreground/50"
-                  style={{
-                    fontFamily: '"Atkinson Hyperlegible", Helvetica, Arial, sans-serif',
-                    fontSize: `calc(${metrics.fontSizeMm} * 100cqi / ${geometry.widthMm})`,
-                    lineHeight: `calc(${metrics.stepMm} * 100cqi / ${geometry.widthMm})`,
-                    paddingTop: `calc(${metrics.textareaPaddingTopMm} * 100cqi / ${geometry.widthMm})`,
-                    color: blockInk,
-                  }}
-                />
-
-                <div
-                  role="separator"
-                  aria-orientation="vertical"
-                  title="Drag to resize width"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dragRef.current = {
-                      mode: "resize",
-                      blockId: block.id,
-                      startClientX: e.clientX,
-                      startClientY: e.clientY,
-                      startXMm: block.xMm,
-                      startYMm: block.yMm,
-                      startWidthMm: block.widthMm,
-                    };
-                  }}
-                  className="absolute top-0 -right-1 h-full w-2 cursor-ew-resize"
-                />
-              </div>
+                aria-label={`${field.label}, page ${safePage}`}
+                placeholder={field.placeholder}
+                value={value}
+                onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                spellCheck
+                className={cn(
+                  "absolute resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/40",
+                  showFieldOutlines
+                    ? "ring-1 ring-inset ring-primary/20 hover:ring-primary/50 focus:bg-white/25 focus:ring-primary/80"
+                    : "focus:ring-1 focus:ring-inset focus:ring-primary/35",
+                )}
+                style={{
+                  ...baseStyle,
+                  lineHeight: `calc(${field.stepMm} * 100cqi / ${geometry.widthMm})`,
+                  paddingTop: `calc(${metrics.textareaPaddingTopMm} * 100cqi / ${geometry.widthMm})`,
+                }}
+              />
             );
           })}
+
+          {supportsFreeClick &&
+            pageBlocks.map((block) => {
+              const metrics = computeBlockMetrics(block, settings, geometry);
+              const isActive = block.id === activeBlockId;
+              const lineCount = Math.max(metrics.lineCount, block.text.split("\n").length);
+              const boxHeightMm = Math.max(
+                metrics.stepMm * 1.5,
+                (lineCount + 0.5) * metrics.stepMm,
+              );
+
+              return (
+                <div
+                  key={block.id}
+                  className="group absolute"
+                  style={{
+                    left: `${(block.xMm / geometry.widthMm) * 100}%`,
+                    top: `${(block.yMm / geometry.heightMm) * 100}%`,
+                    width: `${(block.widthMm / geometry.widthMm) * 100}%`,
+                    height: `${(boxHeightMm / geometry.heightMm) * 100}%`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <textarea
+                    ref={isActive ? blockTextareaRef : undefined}
+                    aria-label={`Note on ${tpl.name}, page ${safePage}`}
+                    placeholder="Type note..."
+                    value={block.text}
+                    onFocus={() => setActiveBlockId(block.id)}
+                    onChange={(e) => updateBlockText(block.id, e.target.value)}
+                    spellCheck
+                    className={cn(
+                      "h-full w-full resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/45",
+                      isActive
+                        ? "border border-dashed border-primary/60 bg-white/20"
+                        : "border border-transparent hover:border-primary/35",
+                    )}
+                    style={{
+                      fontFamily: '"Atkinson Hyperlegible", Helvetica, Arial, sans-serif',
+                      fontSize: `calc(${metrics.fontSizeMm} * 100cqi / ${geometry.widthMm})`,
+                      lineHeight: `calc(${metrics.stepMm} * 100cqi / ${geometry.widthMm})`,
+                      paddingTop: `calc(${metrics.textareaPaddingTopMm} * 100cqi / ${geometry.widthMm})`,
+                      color: resolvedInk,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Delete note"
+                    title="Remove note"
+                    onClick={() => deleteBlock(block.id)}
+                    className={cn(
+                      "bg-background text-muted-foreground hover:text-destructive absolute -top-2.5 -right-2.5 flex size-4 items-center justify-center rounded-full border shadow-xs transition-opacity",
+                      isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                    )}
+                  >
+                    <X className="size-2.5" aria-hidden="true" />
+                  </button>
+                </div>
+              );
+            })}
         </div>
       )}
     </div>
@@ -646,12 +583,12 @@ export function PaperPreview({
             aria-label="Full-screen paper editor controls"
           >
             <span className="text-muted-foreground hidden px-1 text-xs font-medium md:inline">
-              {tpl.name} · Click anywhere to type
+              {helperHint}
             </span>
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Ink color">
               {INK_SWATCHES.map((swatch) => {
-                const active = currentInkColor.toLowerCase() === swatch.color.toLowerCase();
+                const active = settings.inkColor.toLowerCase() === swatch.color.toLowerCase();
                 return (
                   <button
                     key={swatch.color}
@@ -659,7 +596,9 @@ export function PaperPreview({
                     disabled={settings.printerType === "bw"}
                     aria-label={swatch.label}
                     aria-pressed={active}
-                    onClick={() => applyInkColor(swatch.color, swatch.label)}
+                    onClick={() =>
+                      onChange({ ...settings, inkColor: swatch.color }, `Selected ${swatch.label}.`)
+                    }
                     className={cn(
                       "size-5 cursor-pointer rounded-full border transition-transform disabled:opacity-40",
                       active ? "scale-110 ring-2 ring-ring ring-offset-1" : "border-foreground/30",
@@ -672,7 +611,7 @@ export function PaperPreview({
 
             <div className="flex items-center gap-0.5" role="group" aria-label="Text size">
               {INK_SIZES.map((sz) => {
-                const active = Math.abs(currentFontScale - sz.scale) < 0.05;
+                const active = Math.abs((settings.inkFontScale ?? 1) - sz.scale) < 0.05;
                 return (
                   <Button
                     key={sz.label}
@@ -682,7 +621,9 @@ export function PaperPreview({
                     className="h-7 px-2 text-xs"
                     aria-label={sz.name}
                     aria-pressed={active}
-                    onClick={() => applyFontScale(sz.scale, sz.name)}
+                    onClick={() =>
+                      onChange({ ...settings, inkFontScale: sz.scale }, `Selected ${sz.name}.`)
+                    }
                   >
                     {sz.label}
                   </Button>
@@ -775,7 +716,7 @@ export function PaperPreview({
               size="sm"
               className="h-7 rounded-full px-3 text-xs"
               title="Exit full-screen edit (Esc)"
-              onClick={pruneEmptyAndExit}
+              onClick={exitEditMode}
             >
               <Check aria-hidden="true" />
               <span>Done</span>
@@ -784,7 +725,7 @@ export function PaperPreview({
         </div>
 
         <div
-          className={`print-stage flex min-h-0 flex-1 p-2 sm:p-4 ${
+          className={`print-stage relative flex min-h-0 flex-1 p-2 sm:p-4 ${
             isFit
               ? "items-center justify-center overflow-hidden"
               : "items-start justify-center overflow-auto"
@@ -792,6 +733,11 @@ export function PaperPreview({
           style={isFit ? { containerType: "size" } : undefined}
         >
           {sheetElement}
+          {supportsFreeClick && pageBlocks.length === 0 && (
+            <div className="no-print pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full border bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-xs backdrop-blur-xs">
+              Click anywhere on the sheet to write
+            </div>
+          )}
         </div>
 
         {printAllPages && (

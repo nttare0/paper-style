@@ -1,74 +1,79 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PAPER_SETTINGS } from "../src/data/templates";
+import { applyTemplateDefaults, DEFAULT_PAPER_SETTINGS, PAPER_TEMPLATES } from "../src/data/templates";
 import { buildSheetSvg } from "../src/engine/buildSheetSvg";
 import { computeSheetGeometry } from "../src/engine/geometry";
-import { createBlockAtPoint } from "../src/engine/writingBox";
+import { getSheetFields } from "../src/engine/sheetFields";
 
-describe("Universal simple click-anywhere sheet editing", () => {
-  it("keeps Weekly Planner notes contained within the clicked day box", () => {
-    const settings = { ...DEFAULT_PAPER_SETTINGS, paperType: "weekly-planner" as const };
-    const geom = computeSheetGeometry(settings, 1);
+describe("Simple template-aware sheet editing across all 77 templates", () => {
+  it("computes valid in-bounds editable fields for all 77 paper templates", () => {
+    for (const tpl of PAPER_TEMPLATES) {
+      const settings = applyTemplateDefaults(DEFAULT_PAPER_SETTINGS, tpl.id);
+      const geom = computeSheetGeometry(settings, 1);
+      const fields = getSheetFields(settings, geom);
 
-    // Click inside top-left box (MONDAY)
-    const mondayBlock = createBlockAtPoint(settings, geom, 22, 32, "b1");
-    expect(mondayBlock.xMm).toBeGreaterThanOrEqual(geom.contentBox.x);
-    expect(mondayBlock.xMm + mondayBlock.widthMm).toBeLessThan(geom.contentBox.x + geom.contentBox.width / 2);
-
-    // Click inside top-right box (TUESDAY)
-    const tuesdayBlock = createBlockAtPoint(settings, geom, 120, 32, "b2");
-    expect(tuesdayBlock.xMm).toBeGreaterThan(geom.contentBox.x + geom.contentBox.width / 2);
-    expect(tuesdayBlock.xMm + tuesdayBlock.widthMm).toBeLessThanOrEqual(geom.contentBox.right);
+      for (const f of fields) {
+        expect(Number.isFinite(f.xMm)).toBe(true);
+        expect(Number.isFinite(f.yMm)).toBe(true);
+        expect(f.widthMm).toBeGreaterThanOrEqual(10);
+        expect(f.heightMm).toBeGreaterThanOrEqual(4);
+        expect(f.stepMm).toBeGreaterThanOrEqual(3);
+        expect(f.xMm).toBeGreaterThanOrEqual(0);
+        expect(f.yMm).toBeGreaterThanOrEqual(0);
+        expect(f.xMm + f.widthMm).toBeLessThanOrEqual(geom.widthMm + 0.01);
+        expect(f.yMm + f.heightMm).toBeLessThanOrEqual(geom.heightMm + 0.01);
+      }
+    }
   });
 
-  it("keeps Monthly Calendar notes contained within a single calendar cell", () => {
+  it("aligns Cornell Notes fields cleanly to Topic, Cues, Notes, and Summary", () => {
+    const settings = applyTemplateDefaults(DEFAULT_PAPER_SETTINGS, "cornell-notes");
+    const geom = computeSheetGeometry(settings, 1);
+    const fields = getSheetFields(settings, geom);
+    const byId = Object.fromEntries(fields.map((f) => [f.id, f]));
+
+    expect(byId.topic).toBeDefined();
+    expect(byId.cues).toBeDefined();
+    expect(byId.notes).toBeDefined();
+    expect(byId.summary).toBeDefined();
+    expect(byId.cues!.xMm + byId.cues!.widthMm).toBeLessThan(byId.notes!.xMm);
+    expect(byId.summary!.yMm).toBeGreaterThan(byId.notes!.yMm + byId.notes!.heightMm);
+  });
+
+  it("provides individual day boxes on Weekly Planner and cell boxes on Monthly Calendar", () => {
+    const weekly = applyTemplateDefaults(DEFAULT_PAPER_SETTINGS, "weekly-planner");
+    const wFields = getSheetFields(weekly, computeSheetGeometry(weekly, 1));
+    expect(wFields.some((f) => f.label === "Monday")).toBe(true);
+    expect(wFields.some((f) => f.label === "Weekly Notes")).toBe(true);
+
+    const cal = applyTemplateDefaults(DEFAULT_PAPER_SETTINGS, "monthly-calendar");
+    const cFields = getSheetFields(cal, computeSheetGeometry(cal, 1));
+    expect(cFields.some((f) => f.id === "month")).toBe(true);
+    expect(cFields.some((f) => f.id === "year")).toBe(true);
+    expect(cFields.some((f) => f.id === "cal-0-0")).toBe(true);
+    expect(cFields.some((f) => f.id === "cal-4-6")).toBe(true);
+    expect(cFields.some((f) => f.id === "notes")).toBe(true);
+  });
+
+  it("renders typed template fields and click-anywhere blocks cleanly into SVG output", () => {
     const settings = {
-      ...DEFAULT_PAPER_SETTINGS,
-      paperType: "monthly-calendar" as const,
-      orientation: "landscape" as const,
-    };
-    const geom = computeSheetGeometry(settings, 1);
-
-    // Click inside column 2, row 1 day cell
-    const calW = geom.contentBox.width * 0.82 - 4;
-    const cellW = calW / 7;
-    const clickX = geom.contentBox.x + cellW * 2.3;
-    const block = createBlockAtPoint(settings, geom, clickX, 70, "cal1");
-
-    expect(block.widthMm).toBeLessThan(cellW);
-    expect(block.xMm).toBeGreaterThanOrEqual(geom.contentBox.x + cellW * 2);
-    expect(block.xMm + block.widthMm).toBeLessThanOrEqual(geom.contentBox.x + cellW * 3);
-  });
-
-  it("places Cornell Notes blocks cleanly inside Cues, Notes, or Summary", () => {
-    const settings = { ...DEFAULT_PAPER_SETTINGS, paperType: "cornell-notes" as const };
-    const geom = computeSheetGeometry(settings, 1);
-
-    const cueBlock = createBlockAtPoint(settings, geom, 20, 60, "c1");
-    expect(cueBlock.xMm + cueBlock.widthMm).toBeLessThan(69);
-
-    const notesBlock = createBlockAtPoint(settings, geom, 80, 60, "c2");
-    expect(notesBlock.xMm).toBeGreaterThanOrEqual(71);
-    expect(notesBlock.xMm + notesBlock.widthMm).toBeLessThanOrEqual(geom.contentBox.right);
-
-    const summaryBlock = createBlockAtPoint(settings, geom, 25, 250, "c3");
-    expect(summaryBlock.yMm).toBeGreaterThanOrEqual(235);
-  });
-
-  it("renders multi-block notes cleanly into final SVG output", () => {
-    const settings = {
-      ...DEFAULT_PAPER_SETTINGS,
-      paperType: "swot-analysis" as const,
+      ...applyTemplateDefaults(DEFAULT_PAPER_SETTINGS, "swot-analysis"),
+      inkColor: "#1D4ED8",
+      pageFields: {
+        "1": {
+          date: "2026-11-16",
+          "quad-0": "Fast SVG engine",
+          "quad-1": "Needs print check",
+        },
+      },
       pageTextBlocks: {
-        "1": [
-          { id: "s1", xMm: 20, yMm: 30, widthMm: 70, text: "Fast SVG engine", color: "#1D4ED8" },
-          { id: "w1", xMm: 112, yMm: 30, widthMm: 70, text: "Needs print check", color: "#B91C1C" },
-        ],
+        "1": [{ id: "free1", xMm: 25, yMm: 220, widthMm: 60, text: "Custom footnote" }],
       },
     };
     const { svg } = buildSheetSvg(settings, 1);
+    expect(svg).toContain("2026-11-16");
     expect(svg).toContain("Fast SVG engine");
-    expect(svg).toContain("#1D4ED8");
     expect(svg).toContain("Needs print check");
-    expect(svg).toContain("#B91C1C");
+    expect(svg).toContain("Custom footnote");
+    expect(svg).toContain("#1D4ED8");
   });
 });
