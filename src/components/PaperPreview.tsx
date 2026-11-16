@@ -78,17 +78,18 @@ export function PaperPreview({
     }
   };
 
-  const sheetMaxWidth =
-    zoom === "fit" ? "490px" : `${Math.round(geometry.widthMm * 2.8 * zoom)}px`;
+  const aspectRatio = geometry.widthMm / geometry.heightMm;
+  const isFit = zoom === "fit";
+  const zoomedWidthPx = isFit ? undefined : Math.round(geometry.widthMm * 2.8 * zoom);
 
   return (
     <main
       id="preview-main"
-      className="print-only-main min-w-0 flex-1 lg:sticky lg:top-16"
+      className="print-only-main min-w-0 flex-1 lg:sticky lg:top-14"
     >
-      <Card className="print-card gap-3.5 py-4">
-        <CardHeader className="no-print border-b px-4 pb-3.5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <Card className="print-card gap-3 py-3.5">
+        <CardHeader className="no-print border-b px-4 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div className="space-y-0.5">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-base">{tpl.name}</CardTitle>
@@ -174,15 +175,30 @@ export function PaperPreview({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3.5 px-4">
+        <CardContent className="space-y-3 px-4">
           <div
-            className={`print-stage studio-mat flex max-h-[65vh] justify-center overflow-auto rounded-lg border p-4 sm:p-6 ${
-              printAllPages ? "print:hidden" : ""
-            }`}
+            className={`print-stage studio-mat flex h-[56vh] min-h-[340px] max-h-[660px] lg:h-[calc(100vh-13.5rem)] rounded-lg border p-3 sm:p-4 ${
+              isFit
+                ? "items-center justify-center overflow-hidden"
+                : "items-start justify-center overflow-auto"
+            } ${printAllPages ? "print:hidden" : ""}`}
+            style={isFit ? { containerType: "size" } : undefined}
           >
             <div
-              className="sheet-preview-frame w-full bg-white shadow-lg ring-1 ring-black/10"
-              style={{ maxWidth: sheetMaxWidth }}
+              className="sheet-preview-frame bg-white shadow-lg ring-1 ring-black/10"
+              style={
+                isFit
+                  ? {
+                      width: `min(calc(100cqw - 2rem), calc((100cqh - 2rem) * ${aspectRatio.toFixed(5)}))`,
+                      aspectRatio: `${geometry.widthMm} / ${geometry.heightMm}`,
+                    }
+                  : {
+                      width: `${zoomedWidthPx}px`,
+                      maxWidth: "none",
+                      flexShrink: 0,
+                      aspectRatio: `${geometry.widthMm} / ${geometry.heightMm}`,
+                    }
+              }
               role="img"
               aria-label={`Live preview of ${tpl.name} on ${sizeName}, page ${safePage} of ${totalPages}`}
               dangerouslySetInnerHTML={{ __html: svg }}

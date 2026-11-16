@@ -146,7 +146,7 @@ export function PaperCreator() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1260px] space-y-3 p-4 sm:px-6 sm:py-4">
+      <div className="mx-auto max-w-[1260px] space-y-3 px-4 py-3 sm:px-6">
         {hasErrors && (
           <Alert variant="destructive" className="no-print py-2.5">
             <AlertTriangle aria-hidden="true" />

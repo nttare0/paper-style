@@ -293,7 +293,7 @@ export function ControlPanel({
             </TabsList>
 
             {/* TAB 1: BASICS */}
-            <TabsContent value="basics" className="space-y-4">
+            <TabsContent value="basics" className="space-y-3">
               {/* Template */}
               <section className="space-y-2.5" aria-labelledby="section-template">
                 <div className="flex items-center justify-between">

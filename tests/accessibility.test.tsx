@@ -29,6 +29,18 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(screen.getByRole("link", { name: "PaperStyle" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("img", { name: /Live preview of/i })).toBeInTheDocument();
 
+    // Default "Fit" mode constrains sheet inside non-scrolling stage
+    const frame = screen.getByRole("img", { name: /Live preview of/i });
+    const stage = frame.parentElement!;
+    expect(stage).toHaveClass("overflow-hidden");
+    expect(frame.style.width).toContain("cqh");
+
+    // Clicking 100% zoom enables scrollable zoomed stage, then Fit restores fit-to-screen
+    fireEvent.click(screen.getByRole("button", { name: "100%" }));
+    expect(stage).toHaveClass("overflow-auto");
+    fireEvent.click(screen.getByRole("button", { name: "Fit" }));
+    expect(stage).toHaveClass("overflow-hidden");
+
     const templateSelect = screen.getByLabelText("Paper Type") as HTMLSelectElement;
     expect(templateSelect).toHaveAttribute("data-slot", "native-select");
 
