@@ -162,6 +162,19 @@ export function parseImportedSettingsJson(
   }
   if (typeof obj.showPageNumber === "boolean") merged.showPageNumber = obj.showPageNumber;
   if (typeof obj.doubleSided === "boolean") merged.doubleSided = obj.doubleSided;
+  if (typeof obj.inkColor === "string") merged.inkColor = obj.inkColor;
+  if (typeof obj.inkFontScale === "number" && Number.isFinite(obj.inkFontScale)) {
+    merged.inkFontScale = Math.max(0.75, Math.min(1.4, obj.inkFontScale));
+  }
+  if (typeof obj.pageNotes === "object" && obj.pageNotes !== null && !Array.isArray(obj.pageNotes)) {
+    const notes: Record<string, string> = {};
+    for (const [k, v] of Object.entries(obj.pageNotes as Record<string, unknown>)) {
+      if (/^\d+$/.test(k) && typeof v === "string") {
+        notes[k] = v;
+      }
+    }
+    merged.pageNotes = notes;
+  }
 
   return { ok: true, settings: merged };
 }

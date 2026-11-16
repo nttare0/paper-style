@@ -721,6 +721,9 @@ export const DEFAULT_PAPER_SETTINGS: PaperSettings = {
   pageCount: 1,
   showPageNumber: false,
   doubleSided: false,
+  pageNotes: {},
+  inkColor: "#1E293B",
+  inkFontScale: 1,
 };
 
 export function applyTemplateDefaults(

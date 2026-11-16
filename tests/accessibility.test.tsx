@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { HomePage } from "../src/components/HomePage";
 import { PaperCreator } from "../src/components/PaperCreator";
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
 
 describe("HomePage strict minimalism with shadcn/ui", () => {
   it("renders ONLY the website name and shadcn link button to /create/", () => {
@@ -30,8 +34,9 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(screen.getByRole("img", { name: /Live preview of/i })).toBeInTheDocument();
 
     // Default "Fit" mode constrains sheet inside non-scrolling stage
-    const frame = screen.getByRole("img", { name: /Live preview of/i });
-    const stage = frame.parentElement!;
+    const previewImg = screen.getByRole("img", { name: /Live preview of/i });
+    const frame = previewImg.closest(".sheet-preview-frame") as HTMLElement;
+    const stage = frame.closest(".print-stage") as HTMLElement;
     expect(stage).toHaveClass("overflow-hidden");
     expect(frame.style.width).toContain("cqh");
 
@@ -78,5 +83,29 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
       screen.getByText(/Page count must be a whole number from 1 to 100/i, { selector: "p span" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Export PDF/i })).toBeDisabled();
+  });
+
+  it("allows editing directly on the chosen paper style and persists text into the SVG sheet", () => {
+    render(<PaperCreator />);
+
+    // Switch to Cornell Notes first, then toggle Edit Sheet
+    const templateSelect = screen.getByLabelText("Paper Type") as HTMLSelectElement;
+    fireEvent.change(templateSelect, { target: { value: "cornell-notes" } });
+
+    const editBtn = screen.getByRole("button", { name: /Edit Sheet/i });
+    fireEvent.click(editBtn);
+
+    const editor = screen.getByLabelText(/Edit text on Cornell Notes, page 1/i);
+    expect(editor).toBeInTheDocument();
+    fireEvent.change(editor, { target: { value: "Lecture 1: Key Takeaways" } });
+
+    // Switch ink color to Royal blue ink, then click Done
+    fireEvent.click(screen.getByRole("button", { name: "Royal blue ink" }));
+    fireEvent.click(screen.getByRole("button", { name: /Done/i }));
+
+    const previewImg = screen.getByRole("img", { name: /Live preview of Cornell Notes/i });
+    expect(previewImg.innerHTML).toContain("Lecture 1: Key Takeaways");
+    expect(previewImg.innerHTML).toContain("#1D4ED8");
+    expect(previewImg.innerHTML).toMatch(/<text x="71" y="50\.\d+" fill="#1D4ED8"[^>]*>Lecture 1: Key Takeaways<\/text>/);
   });
 });

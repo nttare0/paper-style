@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Download,
+  Eraser,
   FileDown,
   FileText,
   Image as ImageIcon,
+  PenLine,
   Printer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +22,17 @@ import {
 } from "@/components/ui/card";
 import { formatLength, PAPER_SIZES } from "@/data/sizes";
 import { getTemplateSpec } from "@/data/templates";
+import { resolvePrintColor } from "@/data/themes";
 import { buildSheetSvg } from "@/engine/buildSheetSvg";
+import { sanitizeHexColor } from "@/engine/svgHelpers";
+import { cn } from "@/lib/utils";
 import type { PaperSettings } from "@/types/paper";
 
 interface PaperPreviewProps {
   settings: PaperSettings;
   hasErrors: boolean;
   exporting: string | null;
+  onChange: (next: PaperSettings, announcement?: string) => void;
   onExportPdf: () => void;
   onExportSvg: (page: number) => void;
   onExportPng: (page: number) => void;
@@ -34,10 +41,24 @@ interface PaperPreviewProps {
 
 type ZoomOption = "fit" | 0.75 | 1 | 1.25;
 
+const INK_SWATCHES = [
+  { color: "#1E293B", label: "Charcoal ink" },
+  { color: "#1D4ED8", label: "Royal blue ink" },
+  { color: "#B91C1C", label: "Crimson ink" },
+  { color: "#15803D", label: "Forest green ink" },
+];
+
+const INK_SIZES = [
+  { scale: 0.85, label: "S", name: "Small ink size" },
+  { scale: 1, label: "M", name: "Medium ink size" },
+  { scale: 1.2, label: "L", name: "Large ink size" },
+];
+
 export function PaperPreview({
   settings,
   hasErrors,
   exporting,
+  onChange,
   onExportPdf,
   onExportSvg,
   onExportPng,
@@ -46,13 +67,29 @@ export function PaperPreview({
   const [zoom, setZoom] = useState<ZoomOption>("fit");
   const [pageIndex, setPageIndex] = useState(1);
   const [printAllPages, setPrintAllPages] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const totalPages = Math.max(1, Math.min(100, Math.round(settings.pageCount)));
   const safePage = Math.min(Math.max(1, pageIndex), totalPages);
+  const pageKey = String(safePage);
+  const pageText = settings.pageNotes?.[pageKey] ?? "";
+
   const tpl = getTemplateSpec(settings.paperType);
   const sizeSpec = PAPER_SIZES.find((s) => s.id === settings.paperSize);
   const sizeName = sizeSpec ? sizeSpec.label.split(" (")[0] : settings.paperSize;
-  const { svg, geometry, fittedStepMm, fittedRows } = buildSheetSvg(settings, safePage);
+
+  const { svg, geometry, writingLayout, fittedStepMm, fittedRows } = buildSheetSvg(
+    settings,
+    safePage,
+    { hidePageNotes: isEditing },
+  );
+
+  const resolvedInk = resolvePrintColor(
+    sanitizeHexColor(settings.inkColor || "#1E293B", "#1E293B"),
+    "text",
+    settings.printerType,
+  );
 
   useEffect(() => {
     const handleBeforePrint = () => {
@@ -67,6 +104,12 @@ export function PaperPreview({
     };
   }, [totalPages]);
 
+  useEffect(() => {
+    if (isEditing) {
+      textareaRef.current?.focus();
+    }
+  }, [isEditing, safePage]);
+
   const handlePrint = () => {
     if (totalPages > 1) {
       setPrintAllPages(true);
@@ -76,6 +119,16 @@ export function PaperPreview({
     } else {
       window.print();
     }
+  };
+
+  const updateCurrentPageNote = (nextText: string) => {
+    const nextNotes = { ...(settings.pageNotes ?? {}) };
+    if (nextText.length === 0) {
+      delete nextNotes[pageKey];
+    } else {
+      nextNotes[pageKey] = nextText;
+    }
+    onChange({ ...settings, pageNotes: nextNotes });
   };
 
   const aspectRatio = geometry.widthMm / geometry.heightMm;
@@ -101,6 +154,11 @@ export function PaperPreview({
                     {geometry.isBackPage ? "Back Side" : "Front Side"}
                   </Badge>
                 )}
+                {pageText.trim().length > 0 && !isEditing && (
+                  <Badge variant="secondary" className="text-xs">
+                    Edited
+                  </Badge>
+                )}
               </div>
               <CardDescription className="text-xs">
                 {sizeName} · {formatLength(geometry.widthMm, settings.units)} ×{" "}
@@ -111,6 +169,27 @@ export function PaperPreview({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant={isEditing ? "default" : "outline"}
+                className="h-8 px-2.5 text-xs"
+                aria-pressed={isEditing}
+                onClick={() => setIsEditing((prev) => !prev)}
+              >
+                {isEditing ? (
+                  <>
+                    <Check aria-hidden="true" />
+                    <span>Done</span>
+                  </>
+                ) : (
+                  <>
+                    <PenLine aria-hidden="true" />
+                    <span>Edit Sheet</span>
+                  </>
+                )}
+              </Button>
+
               {totalPages > 1 && (
                 <div
                   className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5"
@@ -173,6 +252,81 @@ export function PaperPreview({
               </div>
             </div>
           </div>
+
+          {isEditing && (
+            <div
+              className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-2.5 py-1.5"
+              role="toolbar"
+              aria-label="Sheet text formatting"
+            >
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5" role="group" aria-label="Ink color">
+                  <span className="text-muted-foreground text-xs font-medium">Ink:</span>
+                  {INK_SWATCHES.map((swatch) => {
+                    const active = settings.inkColor.toLowerCase() === swatch.color.toLowerCase();
+                    return (
+                      <button
+                        key={swatch.color}
+                        type="button"
+                        disabled={settings.printerType === "bw"}
+                        aria-label={swatch.label}
+                        aria-pressed={active}
+                        onClick={() =>
+                          onChange({ ...settings, inkColor: swatch.color }, `Selected ${swatch.label}.`)
+                        }
+                        className={cn(
+                          "size-5 rounded-full border transition-transform cursor-pointer disabled:opacity-40",
+                          active ? "ring-2 ring-ring ring-offset-1 scale-110" : "border-foreground/30",
+                        )}
+                        style={{ backgroundColor: swatch.color }}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-1" role="group" aria-label="Text size">
+                  <span className="text-muted-foreground text-xs font-medium">Size:</span>
+                  {INK_SIZES.map((sz) => {
+                    const active = Math.abs((settings.inkFontScale ?? 1) - sz.scale) < 0.05;
+                    return (
+                      <Button
+                        key={sz.label}
+                        type="button"
+                        size="sm"
+                        variant={active ? "default" : "ghost"}
+                        className="h-6 px-2 text-xs"
+                        aria-label={sz.name}
+                        aria-pressed={active}
+                        onClick={() =>
+                          onChange({ ...settings, inkFontScale: sz.scale }, `Selected ${sz.name}.`)
+                        }
+                      >
+                        {sz.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground hidden text-xs sm:inline">
+                  Type directly on the {tpl.name} sheet
+                </span>
+                {pageText.length > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => updateCurrentPageNote("")}
+                  >
+                    <Eraser className="size-3" aria-hidden="true" />
+                    <span>Clear Page</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-3 px-4">
@@ -185,7 +339,7 @@ export function PaperPreview({
             style={isFit ? { containerType: "size" } : undefined}
           >
             <div
-              className="sheet-preview-frame bg-white shadow-lg ring-1 ring-black/10"
+              className="sheet-preview-frame relative bg-white shadow-lg ring-1 ring-black/10"
               style={
                 isFit
                   ? {
@@ -199,10 +353,45 @@ export function PaperPreview({
                       aspectRatio: `${geometry.widthMm} / ${geometry.heightMm}`,
                     }
               }
-              role="img"
-              aria-label={`Live preview of ${tpl.name} on ${sizeName}, page ${safePage} of ${totalPages}`}
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
+              onDoubleClick={() => {
+                if (!isEditing) setIsEditing(true);
+              }}
+            >
+              <div
+                className="h-full w-full"
+                role="img"
+                aria-label={`Live preview of ${tpl.name} on ${sizeName}, page ${safePage} of ${totalPages}`}
+                dangerouslySetInnerHTML={{ __html: svg }}
+              />
+
+              {isEditing && (
+                <div
+                  className="no-print absolute inset-0"
+                  style={{ containerType: "inline-size" }}
+                >
+                  <textarea
+                    ref={textareaRef}
+                    aria-label={`Edit text on ${tpl.name}, page ${safePage}`}
+                    placeholder={`Write on ${tpl.name}...`}
+                    value={pageText}
+                    onChange={(e) => updateCurrentPageNote(e.target.value)}
+                    spellCheck
+                    className="absolute resize-none overflow-auto bg-transparent p-0 outline-1 outline-dashed outline-primary/35 focus:outline-primary/60 placeholder:text-muted-foreground/50"
+                    style={{
+                      left: `${(writingLayout.xMm / geometry.widthMm) * 100}%`,
+                      top: `${(writingLayout.yMm / geometry.heightMm) * 100}%`,
+                      width: `${(writingLayout.widthMm / geometry.widthMm) * 100}%`,
+                      height: `${(writingLayout.heightMm / geometry.heightMm) * 100}%`,
+                      fontFamily: '"Atkinson Hyperlegible", Helvetica, Arial, sans-serif',
+                      fontSize: `calc(${writingLayout.fontSizeMm} * 100cqi / ${geometry.widthMm})`,
+                      lineHeight: `calc(${writingLayout.stepMm} * 100cqi / ${geometry.widthMm})`,
+                      paddingTop: `calc(${writingLayout.textareaPaddingTopMm} * 100cqi / ${geometry.widthMm})`,
+                      color: resolvedInk,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {printAllPages && (

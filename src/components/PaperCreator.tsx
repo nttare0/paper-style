@@ -33,6 +33,10 @@ function loadInitialSettings(): PaperSettings {
         ...DEFAULT_PAPER_SETTINGS.marginsMm,
         ...(parsed.marginsMm ?? {}),
       },
+      pageNotes: {
+        ...DEFAULT_PAPER_SETTINGS.pageNotes,
+        ...(parsed.pageNotes ?? {}),
+      },
     };
   } catch {
     return DEFAULT_PAPER_SETTINGS;
@@ -192,6 +196,7 @@ export function PaperCreator() {
             settings={settings}
             hasErrors={hasErrors}
             exporting={exporting}
+            onChange={handleSettingsChange}
             onExportPdf={() =>
               runExport("pdf", () => exportPdfFile(settings), "Exported vector PDF.")
             }

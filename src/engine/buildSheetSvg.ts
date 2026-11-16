@@ -9,10 +9,12 @@ import {
 import { renderBackgroundPattern } from "./patterns";
 import { renderPaperTypeContent } from "./renderers";
 import { fmt, sanitizeHexColor, sanitizeImageDataUrl, svgCircle, svgLine, svgRect, svgText } from "./svgHelpers";
+import { computeWritingLayout, renderSheetNotesSvg, type WritingLayout } from "./writingBox";
 
 export interface BuiltSheetResult {
   svg: string;
   geometry: SheetLayoutGeometry;
+  writingLayout: WritingLayout;
   fittedStepMm: number;
   fittedRows: number;
   fittedCols: number;
@@ -21,6 +23,7 @@ export interface BuiltSheetResult {
 export function buildSheetSvg(
   settings: PaperSettings,
   pageNumber = 1,
+  options?: { hidePageNotes?: boolean },
 ): BuiltSheetResult {
   const geom = computeSheetGeometry(settings, pageNumber);
   const theme = getThemeSpec(settings.theme);
@@ -176,7 +179,19 @@ export function buildSheetSvg(
     );
   }
 
-  // 9. Optional Page Number
+  // 9. Optional User Notes typed directly on the sheet
+  const writingLayout = computeWritingLayout(settings, geom);
+  const pageNote = settings.pageNotes?.[String(pageNumber)] ?? "";
+  if (!options?.hidePageNotes && pageNote.trim().length > 0) {
+    const resolvedInk = resolvePrintColor(
+      sanitizeHexColor(settings.inkColor || "#1E293B", "#1E293B"),
+      "text",
+      settings.printerType,
+    );
+    parts.push(renderSheetNotesSvg(pageNote, writingLayout, resolvedInk));
+  }
+
+  // 10. Optional Page Number
   if (settings.showPageNumber) {
     const pageY = geom.heightMm - Math.max(3, geom.margins.bottom * 0.45);
     const label = `Page ${pageNumber} of ${settings.pageCount}`;
@@ -217,6 +232,7 @@ export function buildSheetSvg(
   return {
     svg,
     geometry: geom,
+    writingLayout,
     fittedStepMm: rowMetrics.stepMm,
     fittedRows: rowMetrics.count,
     fittedCols: colMetrics.count,

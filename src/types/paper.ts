@@ -201,6 +201,9 @@ export interface PaperSettings {
   pageCount: number;
   showPageNumber: boolean;
   doubleSided: boolean;
+  pageNotes: Record<string, string>;
+  inkColor: string;
+  inkFontScale: number;
 }
 
 export interface PaperSizeSpec {
