@@ -187,6 +187,7 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
 
     const installBtn = screen.getByRole("button", { name: /Install App/i });
     expect(installBtn).toBeInTheDocument();
+    expect(installBtn).toHaveClass("hidden", "md:inline-flex");
 
     // Clicking Install App before native prompt opens cross-browser instructions and closes cleanly
     fireEvent.click(installBtn);

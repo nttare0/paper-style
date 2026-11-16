@@ -180,7 +180,7 @@ export function PaperCreator() {
                 <span>Offline Ready</span>
               </Badge>
             )}
-            <Badge variant="secondary" className="max-w-[140px] truncate sm:max-w-none">
+            <Badge variant="secondary" className="max-w-[170px] truncate sm:max-w-none">
               {activeTemplate.name}
             </Badge>
             <Badge variant="outline" className="hidden sm:inline-flex">
@@ -191,7 +191,7 @@ export function PaperCreator() {
                 type="button"
                 size="sm"
                 variant={canNativePrompt ? "default" : "outline"}
-                className="h-8 px-2.5 text-xs font-medium"
+                className="hidden h-8 px-2.5 text-xs font-medium md:inline-flex"
                 onClick={async () => {
                   if (!canNativePrompt) {
                     setShowInstallHelp((prev) => !prev);
@@ -222,7 +222,7 @@ export function PaperCreator() {
         }
       >
         {!isEditing && showInstallHelp && !isInstalled && (
-          <Alert role="region" aria-label="Install PaperStyle instructions" className="no-print py-2.5">
+          <Alert role="region" aria-label="Install PaperStyle instructions" className="no-print max-md:hidden py-2.5">
             <MonitorSmartphone aria-hidden="true" />
             <AlertDescription className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
               <span>
