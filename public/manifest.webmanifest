@@ -1,0 +1,57 @@
+{
+  "id": "/",
+  "name": "PaperStyle — Printable & Editable Paper Studio",
+  "short_name": "PaperStyle",
+  "description": "Design 77+ custom printable paper templates, write directly on the sheet, and export print-ready PDF, SVG, PNG, or DOCX offline.",
+  "start_url": "/create/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1E3A8A",
+  "categories": ["productivity", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "PaperStyle studio with 77+ printable and editable templates"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Paper Studio",
+      "short_name": "Studio",
+      "description": "Design and export custom printable sheets",
+      "url": "/create/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { HomePage } from "../src/components/HomePage";
 import { PaperCreator } from "../src/components/PaperCreator";
@@ -180,5 +180,37 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Done/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("supports installing as a web app via beforeinstallprompt and fallback instructions", async () => {
+    render(<PaperCreator />);
+
+    const installBtn = screen.getByRole("button", { name: /Install App/i });
+    expect(installBtn).toBeInTheDocument();
+
+    // Clicking Install App before native prompt opens cross-browser instructions and closes cleanly
+    fireEvent.click(installBtn);
+    const region = screen.getByRole("region", { name: /Install PaperStyle instructions/i });
+    expect(region).toHaveTextContent(/Download \/ Install PaperStyle App/i);
+    fireEvent.click(screen.getByRole("button", { name: /Close install instructions/i }));
+    expect(
+      screen.queryByRole("region", { name: /Install PaperStyle instructions/i }),
+    ).not.toBeInTheDocument();
+
+    // Firing browser beforeinstallprompt wires one-click native install prompt
+    let prompted = false;
+    const fakeEvent = Object.assign(new Event("beforeinstallprompt"), {
+      platforms: ["web"],
+      userChoice: Promise.resolve({ outcome: "accepted" as const, platform: "web" }),
+      prompt: async () => {
+        prompted = true;
+      },
+    });
+    fireEvent(window, fakeEvent);
+
+    fireEvent.click(screen.getByRole("button", { name: /Install App/i }));
+    await waitFor(() => {
+      expect(prompted).toBe(true);
+    });
   });
 });

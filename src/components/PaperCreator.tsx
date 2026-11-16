@@ -5,8 +5,11 @@ import {
   CheckCircle2,
   Eye,
   FileDown,
+  MonitorSmartphone,
   PenLine,
   SlidersHorizontal,
+  WifiOff,
+  X,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +26,7 @@ import {
   parseImportedSettingsJson,
 } from "@/engine/exporters";
 import { validatePaperSettings } from "@/engine/geometry";
+import { usePwaInstall } from "@/lib/pwa";
 import { cn } from "@/lib/utils";
 import type { PaperSettings } from "@/types/paper";
 import { ControlPanel } from "./ControlPanel";
@@ -66,10 +70,13 @@ export function PaperCreator() {
   const [exporting, setExporting] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [mobilePane, setMobilePane] = useState<"customize" | "preview">("customize");
+  const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  const { canNativePrompt, isInstalled, isOnline, platform, triggerInstall } = usePwaInstall();
 
   useEffect(() => {
     try {
@@ -167,10 +174,42 @@ export function PaperCreator() {
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary" className="max-w-[170px] truncate sm:max-w-none">
+            {!isOnline && (
+              <Badge variant="outline" className="gap-1 text-xs">
+                <WifiOff className="size-3" aria-hidden="true" />
+                <span>Offline Ready</span>
+              </Badge>
+            )}
+            <Badge variant="secondary" className="max-w-[140px] truncate sm:max-w-none">
               {activeTemplate.name}
             </Badge>
-            <Badge variant="outline">{activeSizeName}</Badge>
+            <Badge variant="outline" className="hidden sm:inline-flex">
+              {activeSizeName}
+            </Badge>
+            {!isInstalled && (
+              <Button
+                type="button"
+                size="sm"
+                variant={canNativePrompt ? "default" : "outline"}
+                className="h-8 px-2.5 text-xs font-medium"
+                onClick={async () => {
+                  if (!canNativePrompt) {
+                    setShowInstallHelp((prev) => !prev);
+                    return;
+                  }
+                  const result = await triggerInstall();
+                  if (result === "accepted") {
+                    setShowInstallHelp(false);
+                    const msg = "PaperStyle installed as an app.";
+                    setFeedback({ type: "success", text: msg });
+                    setAnnouncement(msg);
+                  }
+                }}
+              >
+                <MonitorSmartphone aria-hidden="true" />
+                <span>Install App</span>
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -182,6 +221,31 @@ export function PaperCreator() {
             : "mx-auto max-w-[1440px] space-y-3 px-3 py-3 pb-20 sm:px-6 md:pb-5"
         }
       >
+        {!isEditing && showInstallHelp && !isInstalled && (
+          <Alert role="region" aria-label="Install PaperStyle instructions" className="no-print py-2.5">
+            <MonitorSmartphone aria-hidden="true" />
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+              <span>
+                <strong>Download / Install PaperStyle App:</strong>{" "}
+                {platform === "ios"
+                  ? "Tap the Share button in Safari, then choose \"Add to Home Screen\"."
+                  : platform === "desktop-safari"
+                    ? "In Safari choose File -> Add to Dock to launch PaperStyle as a standalone app."
+                    : "Click the Install icon in your browser address bar or open browser menu -> \"Install PaperStyle\". Once installed, all 77 templates and exports work offline."}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0"
+                aria-label="Close install instructions"
+                onClick={() => setShowInstallHelp(false)}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         {!isEditing && (
           <nav
             aria-label="Mobile workspace view"
