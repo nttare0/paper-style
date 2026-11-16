@@ -47,6 +47,7 @@ export function PaperCreator() {
   const [settings, setSettings] = useState<PaperSettings>(() => loadInitialSettings());
   const [announcement, setAnnouncement] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     text: string;
@@ -130,7 +131,11 @@ export function PaperCreator() {
         {announcement}
       </div>
 
-      <header className="no-print sticky top-0 z-30 border-b bg-background/95 backdrop-blur-xs">
+      <header
+        className={`no-print sticky top-0 z-30 border-b bg-background/95 backdrop-blur-xs ${
+          isEditing ? "hidden" : ""
+        }`}
+      >
         <div className="mx-auto flex max-w-[1260px] flex-wrap items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
           <div className="flex flex-wrap items-center gap-2.5">
             <Button asChild variant="outline" size="sm">
@@ -150,8 +155,12 @@ export function PaperCreator() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1260px] space-y-3 px-4 py-3 sm:px-6">
-        {hasErrors && (
+      <div
+        className={
+          isEditing ? "p-0" : "mx-auto max-w-[1260px] space-y-3 px-4 py-3 sm:px-6"
+        }
+      >
+        {hasErrors && !isEditing && (
           <Alert variant="destructive" className="no-print py-2.5">
             <AlertTriangle aria-hidden="true" />
             <AlertDescription>
@@ -160,7 +169,7 @@ export function PaperCreator() {
           </Alert>
         )}
 
-        {feedback && (
+        {feedback && !isEditing && (
           <Alert
             variant={feedback.type === "error" ? "destructive" : "success"}
             role="status"
@@ -176,26 +185,37 @@ export function PaperCreator() {
         )}
 
         <div className="flex flex-col items-start gap-5 lg:flex-row">
-          <ControlPanel
-            settings={settings}
-            errors={errors}
-            onChange={handleSettingsChange}
-            onExportSettings={() => {
-              exportSettingsFile(settings);
-              setFeedback({ type: "success", text: "Downloaded settings JSON." });
-            }}
-            onImportSettings={handleImport}
-            onReset={() => {
-              setSettings(DEFAULT_PAPER_SETTINGS);
-              setFeedback({ type: "success", text: "Reset all settings to defaults." });
-              setAnnouncement("Reset all settings to defaults.");
-            }}
-          />
+          <div className={isEditing ? "hidden" : "contents"}>
+            <ControlPanel
+              settings={settings}
+              errors={errors}
+              onChange={handleSettingsChange}
+              onExportSettings={() => {
+                exportSettingsFile(settings);
+                setFeedback({ type: "success", text: "Downloaded settings JSON." });
+              }}
+              onImportSettings={handleImport}
+              onReset={() => {
+                setSettings(DEFAULT_PAPER_SETTINGS);
+                setFeedback({ type: "success", text: "Reset all settings to defaults." });
+                setAnnouncement("Reset all settings to defaults.");
+              }}
+            />
+          </div>
 
           <PaperPreview
             settings={settings}
             hasErrors={hasErrors}
             exporting={exporting}
+            isEditing={isEditing}
+            onEditingChange={(editing) => {
+              setIsEditing(editing);
+              setAnnouncement(
+                editing
+                  ? `Entered full-screen editing for ${activeTemplate.name}. Press Escape or Done to return.`
+                  : "Exited full-screen sheet editing.",
+              );
+            }}
             onChange={handleSettingsChange}
             onExportPdf={() =>
               runExport("pdf", () => exportPdfFile(settings), "Exported vector PDF.")

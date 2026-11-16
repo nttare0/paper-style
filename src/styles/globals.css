@@ -98,6 +98,11 @@
 
   .print-only-main {
     display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
   }

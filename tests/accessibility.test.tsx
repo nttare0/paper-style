@@ -85,7 +85,7 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     expect(screen.getByRole("button", { name: /Export PDF/i })).toBeDisabled();
   });
 
-  it("allows editing directly on the chosen paper style and persists text into the SVG sheet", () => {
+  it("opens full-screen paper-only edit mode, hides studio chrome, and saves typed text back to SVG", () => {
     render(<PaperCreator />);
 
     // Switch to Cornell Notes first, then toggle Edit Sheet
@@ -95,6 +95,13 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     const editBtn = screen.getByRole("button", { name: /Edit Sheet/i });
     fireEvent.click(editBtn);
 
+    // Full-screen paper editor opens, studio header & control panel are hidden, body scroll locked
+    const dialog = screen.getByRole("dialog", { name: /Full-screen paper editor: Cornell Notes/i });
+    expect(dialog).toHaveClass("fixed", "inset-0", "z-50");
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.querySelector("header")).toHaveClass("hidden");
+    expect(document.getElementById("controls-panel")?.parentElement).toHaveClass("hidden");
+
     const editor = screen.getByLabelText(/Edit text on Cornell Notes, page 1/i);
     expect(editor).toBeInTheDocument();
     fireEvent.change(editor, { target: { value: "Lecture 1: Key Takeaways" } });
@@ -103,9 +110,20 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Royal blue ink" }));
     fireEvent.click(screen.getByRole("button", { name: /Done/i }));
 
+    // Restores studio view & persists typed SVG text into Cornell NOTES column
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+    expect(document.querySelector("header")).not.toHaveClass("hidden");
+
     const previewImg = screen.getByRole("img", { name: /Live preview of Cornell Notes/i });
     expect(previewImg.innerHTML).toContain("Lecture 1: Key Takeaways");
     expect(previewImg.innerHTML).toContain("#1D4ED8");
     expect(previewImg.innerHTML).toMatch(/<text x="71" y="50\.\d+" fill="#1D4ED8"[^>]*>Lecture 1: Key Takeaways<\/text>/);
+
+    // Also verifies Escape exits full-screen edit mode cleanly
+    fireEvent.click(screen.getByRole("button", { name: /Edit Sheet/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
