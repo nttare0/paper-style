@@ -266,7 +266,7 @@ export function ControlPanel({
     <aside
       id="controls-panel"
       aria-label="Paper Customization Controls"
-      className="no-print w-full lg:w-[390px] shrink-0"
+      className="no-print w-full md:w-[320px] lg:w-[368px] xl:w-[400px] shrink-0"
     >
       <Card className="gap-4 py-4">
         <CardHeader className="px-4 pb-0">
@@ -278,16 +278,16 @@ export function ControlPanel({
           </div>
         </CardHeader>
 
-        <CardContent className="px-4">
+        <CardContent className="@container px-4">
           <Tabs defaultValue="basics" className="w-full gap-4">
-            <TabsList className="grid h-10 w-full grid-cols-3">
-              <TabsTrigger value="basics" className="h-8 text-xs sm:text-sm">
+            <TabsList className="grid h-11 w-full grid-cols-3">
+              <TabsTrigger value="basics" className="h-9 text-xs sm:text-sm">
                 Basics
               </TabsTrigger>
-              <TabsTrigger value="layout" className="h-8 text-xs sm:text-sm">
+              <TabsTrigger value="layout" className="h-9 text-xs sm:text-sm">
                 Layout
               </TabsTrigger>
-              <TabsTrigger value="extras" className="h-8 text-xs sm:text-sm">
+              <TabsTrigger value="extras" className="h-9 text-xs sm:text-sm">
                 Extras
               </TabsTrigger>
             </TabsList>
@@ -307,7 +307,7 @@ export function ControlPanel({
                   ) : null}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 @[290px]:grid-cols-2">
                   <Input
                     id="template-search"
                     type="search"
@@ -378,7 +378,7 @@ export function ControlPanel({
                 </div>
 
                 {settings.paperSize === "custom" && (
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 gap-2.5 @[280px]:grid-cols-2">
                     <div className="space-y-1">
                       <Label htmlFor="custom-width">Width ({settings.units})</Label>
                       <NumericInput
@@ -410,7 +410,7 @@ export function ControlPanel({
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5 @[420px]:grid-cols-2">
                   <fieldset className="space-y-1.5">
                     <legend className="text-xs font-medium text-foreground">Orientation</legend>
                     <RadioGroup
@@ -428,13 +428,13 @@ export function ControlPanel({
                           key={item.id}
                           htmlFor={`orient-${item.id}`}
                           className={cn(
-                            "flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors",
+                            "flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                             settings.orientation === item.id
                               ? "border-primary bg-accent text-accent-foreground"
                               : "border-border bg-background hover:bg-muted/50",
                           )}
                         >
-                          <RadioGroupItem id={`orient-${item.id}`} value={item.id} className="size-3.5" />
+                          <RadioGroupItem id={`orient-${item.id}`} value={item.id} className="size-3.5 shrink-0" />
                           <span>{item.label}</span>
                         </label>
                       ))}
@@ -457,7 +457,7 @@ export function ControlPanel({
                           htmlFor={`unit-${item.id}`}
                           aria-label={item.label}
                           className={cn(
-                            "flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors",
+                            "flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                             settings.units === item.id
                               ? "border-primary bg-accent text-accent-foreground"
                               : "border-border bg-background hover:bg-muted/50",
@@ -467,7 +467,7 @@ export function ControlPanel({
                             id={`unit-${item.id}`}
                             value={item.id}
                             aria-label={item.label}
-                            className="size-3.5"
+                            className="size-3.5 shrink-0"
                           />
                           <span aria-hidden="true">{item.short}</span>
                         </label>
@@ -498,7 +498,7 @@ export function ControlPanel({
                           : "Switched to color printer mode.",
                       );
                     }}
-                    className="grid grid-cols-2 gap-2"
+                    className="grid grid-cols-1 gap-2 @[280px]:grid-cols-2"
                   >
                     {[
                       { id: "color" as const, label: "Color printer" },
@@ -508,13 +508,13 @@ export function ControlPanel({
                         key={item.id}
                         htmlFor={`printer-${item.id}`}
                         className={cn(
-                          "flex h-10 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-xs font-medium transition-colors",
+                          "flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-medium leading-tight transition-colors",
                           settings.printerType === item.id
                             ? "border-primary bg-accent text-accent-foreground"
                             : "border-border bg-background hover:bg-muted/50",
                         )}
                       >
-                        <RadioGroupItem id={`printer-${item.id}`} value={item.id} className="size-4" />
+                        <RadioGroupItem id={`printer-${item.id}`} value={item.id} className="size-4 shrink-0" />
                         <span>{item.label}</span>
                       </label>
                     ))}
@@ -634,7 +634,7 @@ export function ControlPanel({
                   Lines &amp; Colors
                 </h2>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5 @[280px]:grid-cols-2">
                   <div className="space-y-1">
                     <Label htmlFor="line-color-picker">Line Color</Label>
                     <div className="flex items-center gap-1.5">
@@ -677,8 +677,8 @@ export function ControlPanel({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2 space-y-1">
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
                     <span className="text-xs font-medium">Line Style</span>
                     <RadioGroup
                       value={settings.lineStyle}
@@ -696,37 +696,52 @@ export function ControlPanel({
                           key={item.id}
                           htmlFor={`lstyle-${item.id}`}
                           className={cn(
-                            "flex h-10 cursor-pointer items-center justify-center gap-1 rounded-md border px-1.5 text-xs font-medium transition-colors",
+                            "flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                             settings.lineStyle === item.id
                               ? "border-primary bg-accent text-accent-foreground"
                               : "border-border bg-background hover:bg-muted/50",
                           )}
                         >
-                          <RadioGroupItem id={`lstyle-${item.id}`} value={item.id} className="size-3.5" />
+                          <RadioGroupItem id={`lstyle-${item.id}`} value={item.id} className="size-3.5 shrink-0" />
                           <span>{item.label}</span>
                         </label>
                       ))}
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="line-width-input">Width (px)</Label>
-                    <NumericInput
-                      id="line-width-input"
-                      step="0.05"
-                      min="0.1"
-                      max="10"
-                      aria-invalid={Boolean(errors.lineWidth)}
-                      aria-describedby={errors.lineWidth ? "line-width-err" : undefined}
-                      value={settings.lineWidthPx}
-                      onCommitNumber={(v) => onChange({ ...settings, lineWidthPx: v })}
-                    />
+                  <div className="grid grid-cols-1 gap-2.5 @[280px]:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="line-width-input">Line Width (px)</Label>
+                      <NumericInput
+                        id="line-width-input"
+                        step="0.05"
+                        min="0.1"
+                        max="10"
+                        aria-invalid={Boolean(errors.lineWidth)}
+                        aria-describedby={errors.lineWidth ? "line-width-err" : undefined}
+                        value={settings.lineWidthPx}
+                        onCommitNumber={(v) => onChange({ ...settings, lineWidthPx: v })}
+                      />
+                    </div>
+                    {selectedTemplate.supportsSlantAngle && (
+                      <div className="space-y-1">
+                        <Label htmlFor="slant-angle-input">Slant Angle (45°–75°)</Label>
+                        <NumericInput
+                          id="slant-angle-input"
+                          min={35}
+                          max={85}
+                          step={1}
+                          value={settings.slantAngleDeg}
+                          onCommitNumber={(v) => onChange({ ...settings, slantAngleDeg: v })}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <FieldError id="line-width-err" message={errors.lineWidth} />
 
                 {selectedTemplate.supportsLeftMarginRule && (
-                  <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+                  <div className="flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 py-2">
                     <Label htmlFor="margin-rule-switch" className="cursor-pointer text-xs">
                       Vertical margin rule line
                     </Label>
@@ -736,20 +751,6 @@ export function ControlPanel({
                       onCheckedChange={(checked) =>
                         onChange({ ...settings, showLeftMarginRule: checked })
                       }
-                    />
-                  </div>
-                )}
-
-                {selectedTemplate.supportsSlantAngle && (
-                  <div className="space-y-1">
-                    <Label htmlFor="slant-angle-input">Slant Guide Angle (45°–75°)</Label>
-                    <NumericInput
-                      id="slant-angle-input"
-                      min={35}
-                      max={85}
-                      step={1}
-                      value={settings.slantAngleDeg}
-                      onCommitNumber={(v) => onChange({ ...settings, slantAngleDeg: v })}
                     />
                   </div>
                 )}
@@ -769,7 +770,7 @@ export function ControlPanel({
                     onValueChange={(val) =>
                       onChange({ ...settings, layoutMode: val as LayoutMode })
                     }
-                    className="grid grid-cols-2 gap-2"
+                    className="grid grid-cols-1 gap-2 @[280px]:grid-cols-2"
                   >
                     {[
                       { id: "fill" as const, label: "Fill to margins" },
@@ -779,20 +780,20 @@ export function ControlPanel({
                         key={item.id}
                         htmlFor={`layout-${item.id}`}
                         className={cn(
-                          "flex h-10 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-xs font-medium transition-colors",
+                          "flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-medium leading-tight transition-colors",
                           settings.layoutMode === item.id
                             ? "border-primary bg-accent text-accent-foreground"
                             : "border-border bg-background hover:bg-muted/50",
                         )}
                       >
-                        <RadioGroupItem id={`layout-${item.id}`} value={item.id} className="size-4" />
+                        <RadioGroupItem id={`layout-${item.id}`} value={item.id} className="size-4 shrink-0" />
                         <span>{item.label}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 </fieldset>
 
-                <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+                <div className="flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 py-2">
                   <Label htmlFor="link-margins-switch" className="cursor-pointer text-xs">
                     Same margin on all 4 sides
                   </Label>
@@ -831,7 +832,7 @@ export function ControlPanel({
                     />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 @[270px]:grid-cols-2">
                     {(["top", "right", "bottom", "left"] as const).map((side) => (
                       <div key={side} className="space-y-1">
                         <Label htmlFor={`margin-${side}`}>
@@ -876,7 +877,7 @@ export function ControlPanel({
                   </NativeSelect>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5 @[280px]:grid-cols-2">
                   <div className="space-y-1">
                     <Label htmlFor="page-count-input">Page Count (1–100)</Label>
                     <NumericInput
@@ -1047,7 +1048,7 @@ export function ControlPanel({
                 </div>
 
                 {settings.sidebarEnabled && (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 @[280px]:grid-cols-2">
                     <div className="space-y-1">
                       <Label htmlFor="sidebar-side">Position</Label>
                       <NativeSelect
@@ -1087,7 +1088,7 @@ export function ControlPanel({
                   Watermark &amp; Logo
                 </h2>
 
-                <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+                <div className="flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 py-2">
                   <Label htmlFor="watermark-switch" className="cursor-pointer text-xs">
                     Watermark
                   </Label>
@@ -1101,7 +1102,7 @@ export function ControlPanel({
                 </div>
 
                 {settings.watermarkEnabled && (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 @[300px]:grid-cols-2">
                     <div className="space-y-1">
                       <Label htmlFor="watermark-text">Text</Label>
                       <Input
@@ -1130,7 +1131,7 @@ export function ControlPanel({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+                <div className="flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 py-2">
                   <Label htmlFor="logo-switch" className="cursor-pointer text-xs">
                     Corner Logo
                   </Label>
@@ -1154,7 +1155,7 @@ export function ControlPanel({
                         onChange={(e) => handleImageFile(e.target.files?.[0], "logo")}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2 @[280px]:grid-cols-2">
                       <div className="space-y-1">
                         <Label htmlFor="logo-corner">Corner</Label>
                         <NativeSelect

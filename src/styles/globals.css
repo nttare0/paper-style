@@ -61,6 +61,16 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  button,
+  a,
+  select,
+  input,
+  textarea,
+  label {
+    touch-action: manipulation;
   }
 
   :focus-visible {

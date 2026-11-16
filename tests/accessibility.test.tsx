@@ -148,4 +148,37 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
       screen.getByRole("img", { name: /Live preview of Music Paper/i }).innerHTML,
     ).toContain("Prelude in C");
   });
+
+  it("supports mobile workspace switching, quick-write action, and zoom inside full-screen editor", () => {
+    render(<PaperCreator />);
+
+    // Mobile switcher toggles active pane cleanly without hiding controls from desktop/a11y tree
+    const customizeBtn = screen.getByRole("button", { name: "Customize" });
+    const previewBtn = screen.getByRole("button", { name: "Sheet Preview" });
+    expect(customizeBtn).toHaveAttribute("aria-pressed", "true");
+    expect(previewBtn).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(previewBtn);
+    expect(previewBtn).toHaveAttribute("aria-pressed", "true");
+    expect(customizeBtn).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(customizeBtn);
+    expect(customizeBtn).toHaveAttribute("aria-pressed", "true");
+
+    // Quick-action bar "Write" enters full-screen editor with zoom controls available on all screen sizes
+    fireEvent.click(screen.getByRole("button", { name: /Write directly on sheet/i }));
+    const dialog = screen.getByRole("dialog", { name: /Full-screen paper editor: Lined Paper/i });
+    expect(dialog).toHaveClass("h-dvh");
+
+    const zoom125 = screen.getByRole("button", { name: "125%" });
+    expect(zoom125).toBeInTheDocument();
+    fireEvent.click(zoom125);
+    expect(zoom125).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Fit" }));
+    expect(screen.getByRole("button", { name: "Fit" })).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: /Done/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });

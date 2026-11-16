@@ -263,6 +263,33 @@ export function PaperPreview({
 
   useEffect(() => {
     if (!isEditing) return;
+    if (legacyNote.trim().length > 0) {
+      const targetId = templateBodyFields[0]?.id ?? "main";
+      const nextNotes = { ...(settings.pageNotes ?? {}) };
+      delete nextNotes[pageKey];
+      onChange({
+        ...settings,
+        pageNotes: nextNotes,
+        pageFields: {
+          ...(settings.pageFields ?? {}),
+          [pageKey]: {
+            ...(settings.pageFields?.[pageKey] ?? {}),
+            [targetId]: legacyNote,
+          },
+        },
+      });
+    }
+    if (isSingleFlowPaperType(settings.paperType) && templateBodyFields[0] && !pendingFocusFieldId) {
+      setPendingFocusFieldId(templateBodyFields[0].id);
+    } else if (templateBodyFields.length === 1 && !pendingFocusFieldId) {
+      setPendingFocusFieldId(templateBodyFields[0]!.id);
+    } else if (supportsFreeClick && pageBlocks.length > 0 && !activeBlockId) {
+      setActiveBlockId(pageBlocks[0]!.id);
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) return;
     if (pendingFocusFieldId) {
       const target = fieldRefs.current[pendingFocusFieldId];
       if (target) {
@@ -400,6 +427,7 @@ export function PaperPreview({
       className={cn(
         "sheet-preview-frame relative bg-white shadow-lg ring-1 ring-black/10",
         isEditing && supportsFreeClick && "cursor-text",
+        !isFit && "m-auto",
       )}
       style={
         isFit
@@ -467,7 +495,7 @@ export function PaperPreview({
                   value={value}
                   onChange={(e) => updateFieldValue(field.id, e.target.value)}
                   className={cn(
-                    "absolute rounded-[2px] bg-transparent p-0 leading-none outline-none placeholder:text-muted-foreground/45",
+                    "absolute scroll-my-16 rounded-[2px] bg-transparent p-0 leading-none outline-none placeholder:text-muted-foreground/45",
                     showFieldOutlines || field.id === "date"
                       ? "ring-1 ring-inset ring-primary/25 hover:ring-primary/55 focus:bg-white/30 focus:ring-primary"
                       : "focus:ring-1 focus:ring-inset focus:ring-primary/40",
@@ -489,7 +517,7 @@ export function PaperPreview({
                 onChange={(e) => updateFieldValue(field.id, e.target.value)}
                 spellCheck
                 className={cn(
-                  "absolute resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/40",
+                  "absolute scroll-my-16 resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/40",
                   showFieldOutlines
                     ? "ring-1 ring-inset ring-primary/20 hover:ring-primary/50 focus:bg-white/25 focus:ring-primary/80"
                     : "focus:ring-1 focus:ring-inset focus:ring-primary/35",
@@ -534,7 +562,7 @@ export function PaperPreview({
                     onChange={(e) => updateBlockText(block.id, e.target.value)}
                     spellCheck
                     className={cn(
-                      "h-full w-full resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/45",
+                      "h-full w-full scroll-my-16 resize-none overflow-y-auto rounded-[2px] bg-transparent p-0 outline-none placeholder:text-muted-foreground/45",
                       isActive
                         ? "border border-dashed border-primary/60 bg-white/20"
                         : "border border-transparent hover:border-primary/35",
@@ -553,11 +581,13 @@ export function PaperPreview({
                     title="Remove note"
                     onClick={() => deleteBlock(block.id)}
                     className={cn(
-                      "bg-background text-muted-foreground hover:text-destructive absolute -top-2.5 -right-2.5 flex size-4 items-center justify-center rounded-full border shadow-xs transition-opacity",
-                      isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                      "bg-background text-muted-foreground hover:text-destructive absolute -top-3.5 -right-3.5 flex size-7 items-center justify-center rounded-full border shadow-xs transition-opacity sm:-top-2.5 sm:-right-2.5 sm:size-5",
+                      isActive
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-90",
                     )}
                   >
-                    <X className="size-2.5" aria-hidden="true" />
+                    <X className="size-3.5 sm:size-2.5" aria-hidden="true" />
                   </button>
                 </div>
               );
@@ -574,15 +604,15 @@ export function PaperPreview({
         role="dialog"
         aria-modal="true"
         aria-label={`Full-screen paper editor: ${tpl.name}`}
-        className="print-only-main studio-mat fixed inset-0 z-50 flex flex-col"
+        className="print-only-main studio-mat fixed inset-0 z-50 flex h-dvh flex-col"
       >
-        <div className="no-print flex shrink-0 justify-center px-3 pt-2.5 pb-1">
+        <div className="no-print flex shrink-0 justify-center px-2 pt-2 pb-1 sm:px-3 sm:pt-2.5">
           <div
-            className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border bg-background/95 px-3 py-1.5 shadow-sm backdrop-blur-xs"
+            className="flex max-h-[28dvh] max-w-full flex-wrap items-center justify-center gap-1.5 overflow-y-auto rounded-2xl border bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur-xs sm:gap-2 sm:rounded-full sm:px-3"
             role="toolbar"
             aria-label="Full-screen paper editor controls"
           >
-            <span className="text-muted-foreground hidden px-1 text-xs font-medium md:inline">
+            <span className="text-muted-foreground hidden px-1 text-xs font-medium lg:inline">
               {helperHint}
             </span>
 
@@ -600,7 +630,7 @@ export function PaperPreview({
                       onChange({ ...settings, inkColor: swatch.color }, `Selected ${swatch.label}.`)
                     }
                     className={cn(
-                      "size-5 cursor-pointer rounded-full border transition-transform disabled:opacity-40",
+                      "size-6 cursor-pointer rounded-full border transition-transform disabled:opacity-40 sm:size-5",
                       active ? "scale-110 ring-2 ring-ring ring-offset-1" : "border-foreground/30",
                     )}
                     style={{ backgroundColor: swatch.color }}
@@ -618,7 +648,7 @@ export function PaperPreview({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "ghost"}
-                    className="h-7 px-2 text-xs"
+                    className="h-8 px-2.5 text-xs sm:h-7 sm:px-2"
                     aria-label={sz.name}
                     aria-pressed={active}
                     onClick={() =>
@@ -641,7 +671,7 @@ export function PaperPreview({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-6 rounded-full"
+                  className="size-7 rounded-full sm:size-6"
                   aria-label="Previous preview page"
                   disabled={safePage <= 1}
                   onClick={() => {
@@ -658,7 +688,7 @@ export function PaperPreview({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-6 rounded-full"
+                  className="size-7 rounded-full sm:size-6"
                   aria-label="Next preview page"
                   disabled={safePage >= totalPages}
                   onClick={() => {
@@ -672,7 +702,7 @@ export function PaperPreview({
             )}
 
             <div
-              className="hidden items-center gap-0.5 rounded-full border bg-muted/40 p-0.5 sm:flex"
+              className="flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5"
               role="group"
               aria-label="Preview zoom"
             >
@@ -689,7 +719,7 @@ export function PaperPreview({
                   type="button"
                   size="sm"
                   variant={zoom === z.id ? "default" : "ghost"}
-                  className="h-6 rounded-full px-2 text-xs"
+                  className="h-7 rounded-full px-2 text-xs sm:h-6"
                   aria-pressed={zoom === z.id}
                   onClick={() => setZoom(z.id)}
                 >
@@ -703,7 +733,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-xs"
+                className="h-8 px-2 text-xs sm:h-7"
                 onClick={clearCurrentPage}
               >
                 <Eraser className="size-3.5" aria-hidden="true" />
@@ -714,7 +744,7 @@ export function PaperPreview({
             <Button
               type="button"
               size="sm"
-              className="h-7 rounded-full px-3 text-xs"
+              className="h-8 rounded-full px-3 text-xs sm:h-7"
               title="Exit full-screen edit (Esc)"
               onClick={exitEditMode}
             >
@@ -725,17 +755,17 @@ export function PaperPreview({
         </div>
 
         <div
-          className={`print-stage relative flex min-h-0 flex-1 p-2 sm:p-4 ${
+          className={`print-stage relative flex min-h-0 flex-1 overscroll-contain p-2 sm:p-4 ${
             isFit
-              ? "items-center justify-center overflow-hidden"
-              : "items-start justify-center overflow-auto"
+              ? "items-center justify-center overflow-y-auto"
+              : "items-start justify-start overflow-auto"
           } ${printAllPages ? "print:hidden" : ""}`}
           style={isFit ? { containerType: "size" } : undefined}
         >
           {sheetElement}
           {supportsFreeClick && pageBlocks.length === 0 && (
-            <div className="no-print pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full border bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-xs backdrop-blur-xs">
-              Click anywhere on the sheet to write
+            <div className="no-print pointer-events-none fixed bottom-4 left-1/2 max-w-[90vw] -translate-x-1/2 truncate rounded-full border bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-xs backdrop-blur-xs">
+              Click or tap anywhere on the sheet to write
             </div>
           )}
         </div>
@@ -761,13 +791,13 @@ export function PaperPreview({
   return (
     <main
       id="preview-main"
-      className="print-only-main min-w-0 flex-1 lg:sticky lg:top-14"
+      className="print-only-main min-w-0 flex-1 md:sticky md:top-14"
     >
       <Card className="print-card gap-3 py-3.5">
-        <CardHeader className="no-print border-b px-4 pb-3">
+        <CardHeader className="no-print border-b px-3.5 pb-3 sm:px-4">
           <div className="flex flex-wrap items-center justify-between gap-2.5">
-            <div className="space-y-0.5">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="min-w-0 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <CardTitle className="text-base">{tpl.name}</CardTitle>
                 <Badge variant="outline" className="text-xs">
                   {settings.printerType === "bw" ? "B&W Laser" : "Color"}
@@ -795,8 +825,8 @@ export function PaperPreview({
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
-                className="h-8 px-2.5 text-xs"
+                variant="secondary"
+                className="h-9 px-3 text-xs font-semibold sm:h-8 sm:px-2.5"
                 onClick={() => enterEditMode()}
               >
                 <PenLine aria-hidden="true" />
@@ -813,7 +843,7 @@ export function PaperPreview({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-7"
+                    className="size-8 sm:size-7"
                     aria-label="Previous preview page"
                     disabled={safePage <= 1}
                     onClick={() => setPageIndex(safePage - 1)}
@@ -827,7 +857,7 @@ export function PaperPreview({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-7"
+                    className="size-8 sm:size-7"
                     aria-label="Next preview page"
                     disabled={safePage >= totalPages}
                     onClick={() => setPageIndex(safePage + 1)}
@@ -855,7 +885,7 @@ export function PaperPreview({
                     type="button"
                     size="sm"
                     variant={zoom === z.id ? "default" : "ghost"}
-                    className="h-7 px-2 text-xs"
+                    className="h-8 px-2 text-xs sm:h-7"
                     aria-pressed={zoom === z.id}
                     onClick={() => setZoom(z.id)}
                   >
@@ -867,12 +897,12 @@ export function PaperPreview({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3 px-4">
+        <CardContent className="space-y-3 px-3.5 sm:px-4">
           <div
-            className={`print-stage studio-mat flex h-[56vh] min-h-[340px] max-h-[660px] lg:h-[calc(100vh-13.5rem)] rounded-lg border p-3 sm:p-4 ${
+            className={`print-stage studio-mat flex h-[48dvh] min-h-[260px] max-h-[540px] rounded-lg border p-2.5 sm:p-4 md:h-[calc(100dvh-14.5rem)] md:min-h-[380px] md:max-h-[920px] ${
               isFit
                 ? "items-center justify-center overflow-hidden"
-                : "items-start justify-center overflow-auto"
+                : "items-start justify-start overflow-auto"
             } ${printAllPages ? "print:hidden" : ""}`}
             style={isFit ? { containerType: "size" } : undefined}
           >
@@ -899,10 +929,11 @@ export function PaperPreview({
             role="group"
             aria-label="Export and print actions"
           >
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 type="button"
                 size="sm"
+                className="h-9 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={onExportPdf}
               >
@@ -913,6 +944,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
+                className="h-9 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={() => onExportSvg(safePage)}
               >
@@ -923,6 +955,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
+                className="h-9 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={() => onExportPng(safePage)}
               >
@@ -933,6 +966,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
+                className="h-9 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={onExportDocx}
               >
@@ -941,7 +975,14 @@ export function PaperPreview({
               </Button>
             </div>
 
-            <Button type="button" size="sm" variant="secondary" disabled={hasErrors} onClick={handlePrint}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="h-9 sm:h-8"
+              disabled={hasErrors}
+              onClick={handlePrint}
+            >
               <Printer aria-hidden="true" />
               <span>Print</span>
             </Button>
