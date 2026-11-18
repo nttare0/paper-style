@@ -1,5 +1,4 @@
-import { FileText, Info, Mail } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FileText, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LegalPageShell } from "./LegalPageShell";
@@ -69,24 +68,6 @@ export function TermsPage() {
             Shema Prince.
           </p>
         </header>
-
-        <Alert>
-          <Info aria-hidden="true" />
-          <AlertTitle>Operator &amp; Jurisdiction Details</AlertTitle>
-          <AlertDescription>
-            Operator identity, contact email, and governing jurisdiction match{" "}
-            <a
-              href="https://github.com/nttare0"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground underline underline-offset-4 hover:opacity-80"
-            >
-              github.com/nttare0
-            </a>
-            . Review these terms with legal counsel if your commercial licensing or regional
-            obligations change.
-          </AlertDescription>
-        </Alert>
 
         <div className="space-y-4">
           {TERMS_SECTIONS.map((section) => (

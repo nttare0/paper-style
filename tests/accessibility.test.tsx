@@ -86,7 +86,9 @@ describe("Legal pages and custom 404 page", () => {
       "href",
       "mailto:nttare0@gmail.com",
     );
-    expect(container.textContent).not.toMatch(/info@example\.com|\[Add |\[specify |Placeholder/i);
+    expect(container.textContent).not.toMatch(
+      /info@example\.com|\[Add |\[specify |Placeholder|Operator & Jurisdiction Details/i,
+    );
   });
 
   it("renders branded NotFoundPage with home and studio CTAs", () => {
