@@ -1,0 +1,20 @@
+---
+description: Modern Web Guidance — search before writing CSS/JS. Native platform first.
+globs: "**/*.{tsx,ts,jsx,js,css,html}"
+alwaysApply: false
+---
+
+# Modern Web Guidance (Cursor mirror of rules/02-modern-web-guidance.md)
+
+> Canonical source: `rules/02-modern-web-guidance.md`. If they differ, canonical wins.
+> Source: https://github.com/GoogleChrome/modern-web-guidance-src
+
+- Always-on layer: governs HOW you write CSS/JS, regardless of component library.
+- Install once: `npx modern-web-guidance@latest install`
+- Search BEFORE coding (every task):
+  - `npx modern-web-guidance@latest search "<task>"`
+  - `npx modern-web-guidance@latest retrieve "<guide-id>"`
+  - `npx modern-web-guidance@latest legacy-scan .` (before refactors)
+- Prefer native platform APIs (Popover, dialog, Anchor Positioning, View Transitions, container queries, oklch, :user-invalid…) over JS libs/polyfills.
+- Lightweight fallbacks only. Accessibility + performance by default (labels, alt, keyboard).
+- Cite the guide ID you retrieved in your response.

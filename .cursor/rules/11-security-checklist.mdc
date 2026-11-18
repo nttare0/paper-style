@@ -1,0 +1,17 @@
+---
+description: Security gate — 32 checks required before any build ships. Never trust client input.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Security Checklist (Cursor mirror of rules/11-security-checklist.md)
+
+> Canonical source: `rules/11-security-checklist.md`. If they differ, canonical wins.
+
+Ship only after all 32 pass: 1 security headers (CSP/HSTS/nosniff, `poweredByHeader: false`) · 2 race conditions (atomic DB ops, no check-then-act) · 3 `.git` not deployed (verify `/.git/config` → 404) · 4 account pre-hijacking (verified email + provider as identity) · 5 Supabase storage (private buckets, RLS, server-side validation) · 6 subdomain takeover (no dangling DNS) · 7 price never from browser (recompute server-side) · 8 SSRF (no user-supplied URL fetches, block metadata IP) · 9 credential stuffing (rate limits, generic errors, MFA) · 10 path traversal (allowlisted base dir, normalized paths) · 11 open database (RLS every table, service key server-only, no NEXT_PUBLIC_ secrets) · 12 reset poisoning (base URL from config, never Host header) · 13 no polyfill.io / uncontrolled CDNs (self-host + SRI) · 14 no prod source maps · 15 SMS pumping (per-phone + per-IP OTP limits, fraud guard) · 16 clickjacking (X-Frame-Options / frame-ancestors) · 17 prompt injection (model output = untrusted data) · 18 open redirect (relative-path / host allowlist only) · 19 JWT secrets (≥256-bit random, server env, verify iss/aud/exp) · 20 user enumeration (generic responses, constant-time) · 21 XSS (escape, sanitize, no user HTML) · 22 SQL injection (parameterized, allowlisted columns) · 23 CSRF (SameSite + tokens + Origin checks) · 24 IDOR (ownership checked server-side on every object) · 25 mass assignment (whitelist fields, never spread req.body) · 26 CORS (strict allowlist, never reflect + credentials) · 27 sessions (HttpOnly/Secure/SameSite, server-side invalidation) · 28 supply chain (lockfile, npm audit, no typosquats) · 29 secrets in git history (never commit; rotate + purge if leaked) · 30 verbose errors/debug routes (generic errors, no debug in prod) · 31 admin/cron/webhook auth (every route authenticates or verifies secret) · 32 DoS (rate-limit + cap expensive endpoints).
+
+Rules:
+
+- Client-sent values are display hints, never trust (price, path, redirect, identity).
+- Verify exact config keys in framework docs — never invent config.
+- Report gate status in the response before finishing.

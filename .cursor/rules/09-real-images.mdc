@@ -1,0 +1,25 @@
+---
+description: Real images only — Unsplash & Pinterest. Never AI-generated, never fabricated URLs.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Real Images Only (Cursor mirror of rules/09-real-images.md)
+
+> Canonical source: `rules/09-real-images.md`. If they differ, canonical wins.
+
+Use **real images** from these two sources — never AI-generated imagery:
+
+1. Unsplash — https://unsplash.com (hero, product, backgrounds, avatars)
+2. Pinterest — https://www.pinterest.com (moodboard, lifestyle, niche imagery)
+
+Rules:
+
+- Copy the EXACT image URL from the source (`images.unsplash.com/photo-…`, `i.pinimg.com/…`). Never guess or construct an ID.
+- Unsplash sizing params: `?w=1600&q=80&auto=format&fit=crop`.
+- VERIFY every URL before shipping: HTTP 200, image content-type, expected dimensions.
+- Attribution: photographer/source in `CREDITS.md` or a comment.
+- Integrate via the framework's image component (e.g. `next/image`) — verify props in docs, never guess. Meaningful alt text on every image.
+- Generated images ONLY when the user explicitly asks (then label them as generated).
+- No placeholder services (picsum, via.placeholder, grey boxes) in final builds.
+- Other stock sites need user approval via `rules/07-how-to-add-a-rule.md`.

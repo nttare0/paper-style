@@ -1,0 +1,29 @@
+---
+description: Launch gate — 20 website essentials required before launch (404, meta, CTA, cookie banner, analytics…).
+globs: "**/*"
+alwaysApply: true
+---
+
+# Launch Checklist (Cursor mirror of rules/12-launch-checklist.md)
+
+> Canonical source: `rules/12-launch-checklist.md`. If they differ, canonical wins.
+
+All 20 pass before launch. Already covered elsewhere (verify there, no duplicate): favicon set · robots.txt · sitemap.xml · OG image · privacy · terms → `rules/08-site-essentials.md`; alt text → `rules/02` + `rules/09`.
+
+Defined here (13):
+
+1. Custom 404 — branded `not-found.tsx`, CTA back home, site layout, mobile-friendly.
+2. Meta title every page — unique per route (~50–60 chars, template + override).
+3. Meta description every page — unique (~150–160 chars), never empty/duplicated.
+4. CTA above the fold — primary Astryx/shadcn button visible without scrolling, concrete verb.
+5. Mobile breakpoints — verified ~360/768/1024/1440px: no overflow, ≥44px touch targets.
+6. Sticky mobile CTA — conversion pages keep CTA reachable; respects safe-area; accessible.
+7. Loading states — every async surface (skeletons/spinners), buttons pending-state, no frozen UI.
+8. Form error states — inline errors, aria-invalid/describedby, error summary focus, input preserved.
+9. Thank-you page — every conversion ends on `/thank-you` (noindex, fires conversion event).
+10. Cookie banner — accept+reject equal prominence; analytics loads only after consent; text flagged for user review.
+11. Analytics — installed & verified in prod; pageviews + conversion events; no PII; consent-aware.
+12. Real contact info — real working email/channel in footer; never invent or ship fake placeholders.
+13. Compressed images — next/image or Unsplash params, WebP/AVIF, explicit dimensions, lazy-load.
+
+Rules: UI via Astryx/shadcn only; never invent analytics config or contact details; legal wording (cookie banner, policies) flagged for user review. Report the 20-point gate status at launch.
