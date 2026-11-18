@@ -10,6 +10,7 @@
 | 1 | **Astryx** | https://github.com/meta/astryx | https://astryx.atmeta.com | `npm i @astryxdesign/core @astryxdesign/theme-neutral @stylexjs/stylex` + `npm i -D @astryxdesign/cli` | `npx @astryxdesign/cli search <q>` · `component <Name>` · `docs <topic>` · `template --list` |
 | 2 | **Modern Web Guidance** | https://github.com/GoogleChrome/modern-web-guidance-src | https://developer.chrome.com/docs/modern-web-guidance | `npx modern-web-guidance@latest install` | `npx modern-web-guidance@latest search "<task>"` · `retrieve "<guide-id>"` · `legacy-scan .` |
 | 3 | **shadcn/ui** | https://ui.shadcn.com (source: https://github.com/shadcn-ui/ui) | https://ui.shadcn.com/docs | `npx shadcn@latest init` (once) | `npx shadcn@latest search <q>` · `npx shadcn@latest add <component>` |
+| 4 | **Vercel Web Analytics** | https://github.com/vercel/analytics | https://vercel.com/docs/analytics | `npm i @vercel/analytics` | `npm view @vercel/analytics version` · `cat node_modules/@vercel/analytics/dist/react/index.d.ts` |
 
 ## Stack Assumptions (from the allowlist itself)
 

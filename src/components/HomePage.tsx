@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ConsentAnalyticsBanner, openConsentBanner } from "./ConsentAnalyticsBanner";
 
 export function HomePage() {
   return (
@@ -36,8 +37,16 @@ export function HomePage() {
           >
             Contact
           </a>
+          <button
+            type="button"
+            onClick={openConsentBanner}
+            className="inline-flex min-h-11 cursor-pointer items-center underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Cookie Settings
+          </button>
         </nav>
       </footer>
+      <ConsentAnalyticsBanner />
     </div>
   );
 }

@@ -31,10 +31,10 @@ const POLICY_SECTIONS = [
   },
   {
     id: "cookies",
-    title: "4. Cookies & Tracking",
+    title: "4. Cookies & Consent-Gated Analytics",
     body: [
-      "PaperStyle does not currently set advertising cookies or load third-party tracking scripts. Strictly necessary browser storage (localStorage and Cache Storage) is used only for saving your sheet preferences and offline app assets.",
-      "[If you enable non-essential analytics cookies later, obtain user consent and update this section before launch.]",
+      "PaperStyle stores strictly necessary preferences locally (paperstyle.settings.v1 for sheet settings and paperstyle.analytics.consent.v1 for your analytics choice). No advertising trackers are loaded.",
+      "Optional Vercel Web Analytics loads only after you choose Accept analytics in the consent banner. You can change or withdraw consent at any time via Cookie Settings in the footer. [Review consent banner wording and regional requirements before launch.]",
     ],
   },
   {

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ConsentAnalyticsBanner, openConsentBanner } from "./ConsentAnalyticsBanner";
 
 interface LegalPageShellProps {
   currentPath: "/privacy/" | "/terms/" | "/404";
@@ -111,9 +112,19 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
             >
               Contact
             </a>
+            {currentPath !== "/404" && (
+              <button
+                type="button"
+                onClick={openConsentBanner}
+                className="inline-flex min-h-11 cursor-pointer items-center underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Cookie Settings
+              </button>
+            )}
           </div>
         </nav>
       </footer>
+      {currentPath !== "/404" && <ConsentAnalyticsBanner />}
     </div>
   );
 }

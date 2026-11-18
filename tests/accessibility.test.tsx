@@ -8,16 +8,20 @@ import { TermsPage } from "../src/components/TermsPage";
 
 beforeEach(() => {
   window.localStorage.clear();
+  document.head
+    .querySelectorAll('script[src*="/_vercel/insights/"], script[src*="va.vercel-scripts.com"]')
+    .forEach((el) => el.remove());
 });
 
 describe("HomePage minimalism and site essential links with shadcn/ui", () => {
-  it("renders centered PaperStyle hero CTA above the fold and footer legal links", () => {
+  it("renders centered PaperStyle hero CTA above the fold, footer links, and consent-gated analytics banner", () => {
     const { container } = render(<HomePage />);
     const heading = screen.getByRole("heading", { level: 1, name: "PaperStyle" });
     const createLink = screen.getByRole("link", { name: "Create Paper" });
     const privacyLink = screen.getByRole("link", { name: "Privacy Policy" });
     const termsLink = screen.getByRole("link", { name: "Terms & Conditions" });
     const contactLink = screen.getByRole("link", { name: "Contact" });
+    const cookieSettingsBtn = screen.getByRole("button", { name: "Cookie Settings" });
 
     expect(heading).toBeInTheDocument();
     expect(createLink).toHaveAttribute("href", "/create/");
@@ -25,6 +29,31 @@ describe("HomePage minimalism and site essential links with shadcn/ui", () => {
     expect(privacyLink).toHaveAttribute("href", "/privacy/");
     expect(termsLink).toHaveAttribute("href", "/terms/");
     expect(contactLink).toHaveAttribute("href", "/privacy/#contact");
+    expect(cookieSettingsBtn).toBeInTheDocument();
+
+    // Analytics script must NOT load before explicit consent
+    expect(
+      document.head.querySelector('script[src*="vercel"]'),
+    ).toBeNull();
+
+    // Consent banner offers equal-prominence Reject and Accept controls
+    const consentRegion = screen.getByRole("complementary", { name: "Analytics consent" });
+    const rejectBtn = screen.getByRole("button", { name: "Reject analytics" });
+    const acceptBtn = screen.getByRole("button", { name: "Accept analytics" });
+    expect(consentRegion).toBeInTheDocument();
+    expect(rejectBtn.getAttribute("data-variant")).toBe(acceptBtn.getAttribute("data-variant"));
+
+    // Rejecting closes banner without injecting analytics
+    fireEvent.click(rejectBtn);
+    expect(screen.queryByRole("complementary", { name: "Analytics consent" })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("rejected");
+    expect(document.head.querySelector('script[src*="vercel"]')).toBeNull();
+
+    // Reopening via Cookie Settings and accepting injects analytics script
+    fireEvent.click(cookieSettingsBtn);
+    fireEvent.click(screen.getByRole("button", { name: "Accept analytics" }));
+    expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("accepted");
+    expect(document.head.querySelector('script[src*="vercel"]')).not.toBeNull();
 
     expect(container.querySelectorAll("h1, h2, h3, h4, h5, h6")).toHaveLength(1);
     expect(container.querySelectorAll("main")).toHaveLength(1);
@@ -37,7 +66,8 @@ describe("Legal pages and custom 404 page", () => {
     const { container } = render(<PrivacyPage />);
     expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeInTheDocument();
     expect(screen.getByText(/Placeholder Legal Content — Review Before Launch/i)).toBeInTheDocument();
-    expect(screen.getByText(/paperstyle\.settings\.v1/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/paperstyle\.settings\.v1/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/paperstyle\.analytics\.consent\.v1/i)).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/info@example\.com/i);
   });
 

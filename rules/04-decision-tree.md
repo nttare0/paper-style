@@ -48,6 +48,7 @@
 | Chat / AI prompt UI | shadcn **AI Elements** | MWG: a11y + performance |
 | Theming / dark mode | Astryx theme tokens **or** shadcn CSS vars | MWG: `oklch`, forced-colors |
 | Performance fix | — | MWG: preloading, INP, `scheduler.yield` |
+| Web analytics & consent | `@vercel/analytics/react` (consent-gated) + Astryx/shadcn banner | MWG: privacy, accessible landmarks & focus |
 
 ## Step 4 — If neither system covers it
 

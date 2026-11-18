@@ -21,6 +21,7 @@ rewriting the whole guideline.
 | 10 | [10-prebuild-plugins.md](10-prebuild-plugins.md) | Pre-build plugins: Ponytail + Agent Skills — install gate before any build session |
 | 11 | [11-security-checklist.md](11-security-checklist.md) | Security gate: 32 checks (headers, races, RLS, SSRF, XSS, CSRF, IDOR, CORS…) before shipping |
 | 12 | [12-launch-checklist.md](12-launch-checklist.md) | Launch gate: 20 website essentials (404, meta titles, CTAs, loading/error states, cookie banner, analytics…) |
+| 13 | [13-vercel-analytics.md](13-vercel-analytics.md) | Vercel Web Analytics (`@vercel/analytics`) consent-gated setup & verification |
 
 ## How agents should read them
 

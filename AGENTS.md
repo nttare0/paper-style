@@ -15,6 +15,7 @@
 | 1 | **Astryx** | https://github.com/meta/astryx · Docs: https://astryx.atmeta.com | Meta design system — 150+ accessible React components, themes, templates, CLI |
 | 2 | **Modern Web Guidance** | https://github.com/GoogleChrome/modern-web-guidance-src · Docs: https://developer.chrome.com/docs/modern-web-guidance | Google Chrome skills for modern platform APIs, CSS, performance & accessibility |
 | 3 | **shadcn/ui** | https://ui.shadcn.com · Docs: https://ui.shadcn.com/docs | Composable, accessible components you own — code distribution, not a black-box library |
+| 4 | **Vercel Web Analytics** | https://github.com/vercel/analytics · Docs: https://vercel.com/docs/analytics | Consent-gated pageview & web analytics (`@vercel/analytics`, added via rule 07) |
 
 **Nothing else is allowed.** No other UI library, component, hook, CLI, or "helpful" package — unless the user explicitly adds it via [`rules/07-how-to-add-a-rule.md`](rules/07-how-to-add-a-rule.md).
 
@@ -52,6 +53,7 @@
 | Session gate: Ponytail + Agent Skills installed pre-build | **Pre-build plugins** | [`rules/10-prebuild-plugins.md`](rules/10-prebuild-plugins.md) |
 | Security: headers, RLS, SSRF, redirects, 32-check ship gate | **Security checklist** | [`rules/11-security-checklist.md`](rules/11-security-checklist.md) |
 | Launch gate: 20 website essentials (404, meta, CTA, cookie banner…) | **Launch checklist** | [`rules/12-launch-checklist.md`](rules/12-launch-checklist.md) |
+| Consent-gated Vercel Web Analytics (`@vercel/analytics/react`) | **Vercel Web Analytics** | [`rules/13-vercel-analytics.md`](rules/13-vercel-analytics.md) |
 
 ---
 
@@ -128,9 +130,10 @@ If no allowlisted tool covers the request:
 | [`rules/10-prebuild-plugins.md`](rules/10-prebuild-plugins.md) | Pre-build plugins: Ponytail + Agent Skills install gate |
 | [`rules/11-security-checklist.md`](rules/11-security-checklist.md) | Security checklist: 32 checks required before shipping |
 | [`rules/12-launch-checklist.md`](rules/12-launch-checklist.md) | Launch checklist: 20 website essentials required before launch |
+| [`rules/13-vercel-analytics.md`](rules/13-vercel-analytics.md) | Vercel Web Analytics (`@vercel/analytics`) consent-gated setup |
 
 **Compatibility shims** (same rules, other agent formats): [`CLAUDE.md`](CLAUDE.md) · [`.github/copilot-instructions.md`](.github/copilot-instructions.md) · [`.cursor/rules/`](.cursor/rules/)
 
 ---
 
-*Version: 1.7 — 2026-11-17 · Allowlist: Astryx, Modern Web Guidance, shadcn/ui only · Images: Unsplash, Pinterest (real photos only) · Plugins: Ponytail, Agent Skills · Gates: security (32) + launch (20).*
+*Version: 1.8 — 2026-11-18 · Allowlist: Astryx, Modern Web Guidance, shadcn/ui, Vercel Web Analytics · Images: Unsplash, Pinterest (real photos only) · Plugins: Ponytail, Agent Skills · Gates: security (32) + launch (20).*
