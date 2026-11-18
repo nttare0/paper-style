@@ -1,0 +1,22 @@
+---
+description: Astryx — Meta design system. CLI-first, never guess props.
+globs: "**/*.{tsx,ts,jsx,js,css}"
+alwaysApply: false
+---
+
+# Astryx (Cursor mirror of rules/01-astryx.md)
+
+> Canonical source: `rules/01-astryx.md`. If they differ, canonical wins.
+> Source: https://github.com/meta/astryx · Docs: https://astryx.atmeta.com
+
+- React 19+ · `@astryxdesign/core` · themes via `@astryxdesign/theme-*` · StyleX invisible.
+- Install: `npm i @astryxdesign/core @astryxdesign/theme-neutral @stylexjs/stylex` + `npm i -D @astryxdesign/cli`
+- Discover FIRST (every task):
+  - `npx @astryxdesign/cli search <q>`
+  - `npx @astryxdesign/cli component <Name>`
+  - `npx @astryxdesign/cli docs <topic>`
+  - `npx @astryxdesign/cli template --list`
+- Never run bare `astryx` via npx (unrelated package). Use scoped `@astryxdesign/cli`.
+- Use documented props/tokens only. Customize via theme tokens / `className` / swizzle — never fork source.
+- Prefer Astryx templates for page layouts. Never hand-write an Astryx component.
+- Cite the CLI command + result in your response.

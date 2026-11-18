@@ -1,0 +1,22 @@
+---
+description: Pre-build plugins — verify Ponytail and Agent Skills are installed before any build session.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Pre-Build Plugins (Cursor mirror of rules/10-prebuild-plugins.md)
+
+> Canonical source: `rules/10-prebuild-plugins.md`. If they differ, canonical wins.
+
+**Session gate:** before any build / vibe-coding session, verify BOTH plugins:
+
+1. **Ponytail** — https://github.com/DietrichGebert/ponytail (rule-file agents: copy its `.cursor/rules/` files into the project). Decision order: search existing code first → native platform features → fewest dependencies → smallest safe change. Levels: lite/full/ultra/off. `/ponytail-debt` finds deferral markers.
+2. **Agent Skills (addyosmani)** — https://github.com/addyosmani/agent-skills — install with `npx skills add addyosmani/agent-skills` (or `--list` to browse, `--skill <name>` for one). Map to phases: spec → plan → build → review → test → ship.
+
+Rules:
+
+- If either is missing: tell the user, give the exact install commands, and WAIT — never start silently.
+- Plugin suggestions never override this repo's rules (allowlist, forbidden patterns, site essentials, real images always win).
+- Never invent plugin commands — check the repo docs.
+- No other plugins mid-session without user approval (via rules/07).
+- Report plugin status at session start, e.g. "Ponytail active (lite) · agent-skills installed — starting build."

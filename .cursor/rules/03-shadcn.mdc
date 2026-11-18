@@ -1,0 +1,21 @@
+---
+description: shadcn/ui — CLI + registry only. Never hand-write components from memory.
+globs: "**/*.{tsx,ts,jsx,js,css}"
+alwaysApply: false
+---
+
+# shadcn/ui (Cursor mirror of rules/03-shadcn.md)
+
+> Canonical source: `rules/03-shadcn.md`. If they differ, canonical wins.
+> Site: https://ui.shadcn.com · Docs: https://ui.shadcn.com/docs
+
+- Code distribution, not a black-box library — you own the installed code.
+- Init once: `npx shadcn@latest init` (creates `components.json` — never hand-create it).
+- Discover FIRST (every task):
+  - `npx shadcn@latest search <q>`
+  - `npx shadcn@latest add <component>`
+  - Read the docs page: https://ui.shadcn.com/docs/components/<name>
+- Use installed source's actual props/variants. Theme via CSS vars + Tailwind.
+- Never hand-write a shadcn component from memory or copy from blogs.
+- Never mix with Astryx on the same screen without explicit user approval.
+- Cite the CLI command you ran in your response.

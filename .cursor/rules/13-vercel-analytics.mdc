@@ -1,0 +1,14 @@
+---
+description: Vercel Web Analytics (@vercel/analytics) — consent-gated analytics rules.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Vercel Web Analytics (Cursor mirror of rules/13-vercel-analytics.md)
+
+> Canonical source: `rules/13-vercel-analytics.md`.
+
+- Install: `npm install @vercel/analytics`
+- Verify types before coding: `cat node_modules/@vercel/analytics/dist/react/index.d.ts`
+- Import `Analytics` from `@vercel/analytics/react` and mount **only** after explicit user consent (`accept` vs `reject` of equal prominence).
+- Keep PII out of URLs/events (`beforeSend`) and enable Web Analytics in the Vercel dashboard.

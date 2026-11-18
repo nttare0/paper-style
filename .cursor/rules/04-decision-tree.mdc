@@ -1,0 +1,22 @@
+---
+description: Decision tree — which tool wins for which task. One system per screen.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Decision Tree (Cursor mirror of rules/04-decision-tree.md)
+
+> Canonical source: `rules/04-decision-tree.md`. If they differ, canonical wins.
+
+1. Always search Modern Web Guidance first (platform concern).
+2. Check project state: `@astryxdesign/core` in package.json → Astryx project.
+   `components.json` + `components/ui/` → shadcn project. Neither → new project.
+3. Pick ONE component system:
+   - Astryx project → Astryx. shadcn project → shadcn.
+   - New project → Astryx (default) unless user says shadcn.
+   - AI Elements (chat/prompt/reasoning) → shadcn AI Elements.
+   - Astryx has no equivalent (verified via CLI) → shadcn for that piece only.
+4. One screen = one system. Mixing needs explicit user approval.
+5. Neither covers it → show empty search results, stop, ask user. Never invent.
+
+Always include a one-line Decision Log in your response.

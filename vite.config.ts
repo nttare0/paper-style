@@ -5,20 +5,24 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
-function createRoutePlugin(): Plugin {
-  const rewriteCreate = (req: { url?: string }, next: () => void) => {
+function routeRewritePlugin(): Plugin {
+  const rewriteRoutes = (req: { url?: string }, next: () => void) => {
     if (req.url === "/create" || req.url?.startsWith("/create?")) {
       req.url = req.url.replace(/^\/create/, "/create/index.html");
+    } else if (req.url === "/privacy" || req.url?.startsWith("/privacy?")) {
+      req.url = req.url.replace(/^\/privacy/, "/privacy/index.html");
+    } else if (req.url === "/terms" || req.url?.startsWith("/terms?")) {
+      req.url = req.url.replace(/^\/terms/, "/terms/index.html");
     }
     next();
   };
   return {
-    name: "paperstyle-create-route",
+    name: "paperstyle-route-rewrites",
     configureServer(server) {
-      server.middlewares.use((req, _res, next) => rewriteCreate(req, next));
+      server.middlewares.use((req, _res, next) => rewriteRoutes(req, next));
     },
     configurePreviewServer(server) {
-      server.middlewares.use((req, _res, next) => rewriteCreate(req, next));
+      server.middlewares.use((req, _res, next) => rewriteRoutes(req, next));
     },
   };
 }
@@ -32,11 +36,15 @@ function collectDistFiles(dir: string, rootDir: string): string[] {
       results.push(...collectDistFiles(full, rootDir));
     } else {
       const rel = "/" + relative(rootDir, full).replace(/\\/g, "/");
-      if (rel === "/sw.js") continue;
+      if (rel === "/sw.js" || rel === "/404.html") continue;
       if (rel === "/index.html") {
         results.push("/");
       } else if (rel === "/create/index.html") {
         results.push("/create/");
+      } else if (rel === "/privacy/index.html") {
+        results.push("/privacy/");
+      } else if (rel === "/terms/index.html") {
+        results.push("/terms/");
       } else {
         results.push(rel);
       }
@@ -72,7 +80,7 @@ function pwaServiceWorkerPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), createRoutePlugin(), pwaServiceWorkerPlugin()],
+  plugins: [react(), tailwindcss(), routeRewritePlugin(), pwaServiceWorkerPlugin()],
   resolve: {
     alias: {
       "@": resolve(import.meta.dirname, "src"),
@@ -89,10 +97,14 @@ export default defineConfig({
     allowedHosts: true,
   },
   build: {
+    sourcemap: false,
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         create: resolve(import.meta.dirname, "create/index.html"),
+        privacy: resolve(import.meta.dirname, "privacy/index.html"),
+        terms: resolve(import.meta.dirname, "terms/index.html"),
+        notFound: resolve(import.meta.dirname, "404.html"),
       },
     },
   },

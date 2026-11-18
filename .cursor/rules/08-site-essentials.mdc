@@ -1,0 +1,24 @@
+---
+description: Site essentials required in every build — favicon, privacy, terms, sitemap, share preview.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Site Essentials (Cursor mirror of rules/08-site-essentials.md)
+
+> Canonical source: `rules/08-site-essentials.md`. If they differ, canonical wins.
+
+Every build ships **ALL FIVE** — part of Definition of Done:
+
+1. Favicon — `/favicon.ico` + SVG icon + apple-touch icon (framework metadata-file conventions).
+2. Privacy policy — `/privacy` page, linked in footer (placeholder content flagged for user review).
+3. Terms & conditions — `/terms` page, linked in footer (placeholder content flagged for user review).
+4. Sitemap — `/sitemap.xml` generated from real routes + `robots.txt` referencing it.
+5. Share preview — OG + `twitter:card` metadata on every public page; `og:image` 1200×630.
+
+Rules:
+
+- Native framework mechanisms only — NO `next-seo`, `react-helmet`, sitemap generator libs.
+- Page UI via Astryx/shadcn — never hand-rolled.
+- Never fabricate legal text — mark placeholders clearly for user review.
+- Verify each essential (page source, curl sitemap, share debugger) and report status in your response.

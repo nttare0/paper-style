@@ -1,27 +1,95 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { HomePage } from "../src/components/HomePage";
+import { NotFoundPage } from "../src/components/NotFoundPage";
 import { PaperCreator } from "../src/components/PaperCreator";
+import { PrivacyPage } from "../src/components/PrivacyPage";
+import { TermsPage } from "../src/components/TermsPage";
 
 beforeEach(() => {
   window.localStorage.clear();
+  document.head
+    .querySelectorAll('script[src*="/_vercel/insights/"], script[src*="va.vercel-scripts.com"]')
+    .forEach((el) => el.remove());
 });
 
-describe("HomePage strict minimalism with shadcn/ui", () => {
-  it("renders ONLY the website name and shadcn link button to /create/", () => {
+describe("HomePage minimalism and site essential links with shadcn/ui", () => {
+  it("renders centered PaperStyle hero CTA above the fold, footer links, and consent-gated analytics banner", () => {
     const { container } = render(<HomePage />);
     const heading = screen.getByRole("heading", { level: 1, name: "PaperStyle" });
-    const link = screen.getByRole("link", { name: "Create Paper" });
+    const createLink = screen.getByRole("link", { name: "Create Paper" });
+    const privacyLink = screen.getByRole("link", { name: "Privacy Policy" });
+    const termsLink = screen.getByRole("link", { name: "Terms & Conditions" });
+    const contactLink = screen.getByRole("link", { name: "Contact" });
+    const cookieSettingsBtn = screen.getByRole("button", { name: "Cookie Settings" });
 
     expect(heading).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/create/");
-    expect(link).toHaveAttribute("data-slot", "button");
+    expect(createLink).toHaveAttribute("href", "/create/");
+    expect(createLink).toHaveAttribute("data-slot", "button");
+    expect(privacyLink).toHaveAttribute("href", "/privacy/");
+    expect(termsLink).toHaveAttribute("href", "/terms/");
+    expect(contactLink).toHaveAttribute("href", "/privacy/#contact");
+    expect(cookieSettingsBtn).toBeInTheDocument();
 
-    // Strictly no extra links, headings, paragraphs, buttons, or forms on HomePage
-    expect(container.querySelectorAll("a")).toHaveLength(1);
+    // Analytics script must NOT load before explicit consent
+    expect(
+      document.head.querySelector('script[src*="vercel"]'),
+    ).toBeNull();
+
+    // Consent banner offers equal-prominence Reject and Accept controls
+    const consentRegion = screen.getByRole("complementary", { name: "Analytics consent" });
+    const rejectBtn = screen.getByRole("button", { name: "Reject analytics" });
+    const acceptBtn = screen.getByRole("button", { name: "Accept analytics" });
+    expect(consentRegion).toBeInTheDocument();
+    expect(rejectBtn.getAttribute("data-variant")).toBe(acceptBtn.getAttribute("data-variant"));
+
+    // Rejecting closes banner without injecting analytics
+    fireEvent.click(rejectBtn);
+    expect(screen.queryByRole("complementary", { name: "Analytics consent" })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("rejected");
+    expect(document.head.querySelector('script[src*="vercel"]')).toBeNull();
+
+    // Reopening via Cookie Settings and accepting injects analytics script
+    fireEvent.click(cookieSettingsBtn);
+    fireEvent.click(screen.getByRole("button", { name: "Accept analytics" }));
+    expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("accepted");
+    expect(document.head.querySelector('script[src*="vercel"]')).not.toBeNull();
+
     expect(container.querySelectorAll("h1, h2, h3, h4, h5, h6")).toHaveLength(1);
-    expect(container.querySelectorAll("p, button, input, select, nav, footer")).toHaveLength(0);
-    expect(container.textContent?.trim()).toBe("PaperStyleCreate Paper");
+    expect(container.querySelectorAll("main")).toHaveLength(1);
+    expect(container.querySelectorAll("footer")).toHaveLength(1);
+  });
+});
+
+describe("Legal pages and custom 404 page", () => {
+  it("renders PrivacyPolicy with placeholder warning, local storage disclosures, and non-fabricated contact fields", () => {
+    const { container } = render(<PrivacyPage />);
+    expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeInTheDocument();
+    expect(screen.getByText(/Placeholder Legal Content — Review Before Launch/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/paperstyle\.settings\.v1/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/paperstyle\.analytics\.consent\.v1/i)).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/info@example\.com/i);
+  });
+
+  it("renders TermsPage with placeholder warning and non-fabricated contact/governing placeholders", () => {
+    const { container } = render(<TermsPage />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: /Terms & Conditions/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Placeholder Legal Content — Review Before Launch/i)).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/info@example\.com/i);
+  });
+
+  it("renders branded NotFoundPage with home and studio CTAs", () => {
+    render(<NotFoundPage />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: /This sheet could not be found/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Open Paper Studio" })).toHaveAttribute(
+      "href",
+      "/create/",
+    );
   });
 });
 
