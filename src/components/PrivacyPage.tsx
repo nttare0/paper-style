@@ -1,4 +1,4 @@
-import { AlertTriangle, Mail, ShieldCheck } from "lucide-react";
+import { Info, Mail, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,16 +25,16 @@ const POLICY_SECTIONS = [
     id: "third-parties",
     title: "3. Hosting & Third Parties",
     body: [
-      "PaperStyle is hosted as static web assets. Standard web server request logs (such as IP address, user agent, and requested path) may be processed temporarily by the hosting provider for delivery and security.",
-      "[Optional: update this section if you enable analytics, embedded services, or error reporting before launch.]",
+      "PaperStyle is hosted on Vercel as static web assets. Standard web server request logs (such as IP address, user agent, and requested path) may be processed temporarily by Vercel for delivery, reliability, and security.",
+      "If you choose Accept analytics in the consent banner, PaperStyle loads Vercel Web Analytics from the same origin (/_vercel/insights/script.js) with URL query parameters and hashes stripped before transmission.",
     ],
   },
   {
     id: "cookies",
     title: "4. Cookies & Consent-Gated Analytics",
     body: [
-      "PaperStyle stores strictly necessary preferences locally (paperstyle.settings.v1 for sheet settings and paperstyle.analytics.consent.v1 for your analytics choice). No advertising trackers are loaded.",
-      "Optional Vercel Web Analytics loads only after you choose Accept analytics in the consent banner. You can change or withdraw consent at any time via Cookie Settings in the footer. [Review consent banner wording and regional requirements before launch.]",
+      "PaperStyle stores strictly necessary preferences locally (paperstyle.settings.v1 for sheet settings and paperstyle.analytics.consent.v1 for your analytics choice). No advertising cookies or cross-site trackers are loaded.",
+      "Optional Vercel Web Analytics loads only after you choose Accept analytics in the consent banner. You can change or withdraw consent at any time via Cookie Settings in the footer.",
     ],
   },
   {
@@ -48,7 +48,7 @@ const POLICY_SECTIONS = [
     id: "rights",
     title: "6. Your Privacy Rights",
     body: [
-      "Depending on your jurisdiction, you may have rights to access, correct, export, or delete personal data processed about you, or object to certain processing. You can export or reset your local studio settings at any time using your browser or the app's settings controls.",
+      "Depending on your jurisdiction (including applicable data protection laws in Rwanda and your country of residence), you may have rights to access, correct, export, or delete personal data processed about you, or object to certain processing. You can export or reset your local studio settings at any time inside the app, clear your browser's site data, or contact the operator directly.",
     ],
   },
 ];
@@ -61,26 +61,34 @@ export function PrivacyPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="gap-1.5">
               <ShieldCheck className="size-3.5" aria-hidden="true" />
-              <span>Draft Policy</span>
+              <span>Effective November 16, 2026</span>
             </Badge>
-            <Badge variant="secondary">Placeholder — Review Required</Badge>
+            <Badge variant="secondary">Client-Side Studio</Badge>
           </div>
           <h1 className="scroll-m-20 text-3xl font-bold tracking-tight sm:text-4xl">
             Privacy Policy
           </h1>
           <p className="text-muted-foreground text-base leading-relaxed">
-            This placeholder privacy policy describes how PaperStyle handles browser storage and
-            static asset delivery. Replace bracketed placeholders before public launch.
+            This Privacy Policy explains how PaperStyle, operated by Ntare Shema Prince, handles
+            local browser storage, static asset hosting on Vercel, and consent-gated analytics.
           </p>
         </header>
 
-        <Alert variant="warning">
-          <AlertTriangle aria-hidden="true" />
-          <AlertTitle>Placeholder Legal Content — Review Before Launch</AlertTitle>
+        <Alert>
+          <Info aria-hidden="true" />
+          <AlertTitle>Operator Details &amp; Counsel Review</AlertTitle>
           <AlertDescription>
-            This document is a starter template, not final legal advice. Review and replace all
-            bracketed placeholders with your verified legal entity, jurisdiction, and contact
-            details (or have legal counsel review) before launch.
+            Operator and contact details below match{" "}
+            <a
+              href="https://github.com/nttare0"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground underline underline-offset-4 hover:opacity-80"
+            >
+              github.com/nttare0
+            </a>
+            . Review this policy with legal counsel if your commercial distribution or regional
+            compliance obligations change.
           </AlertDescription>
         </Alert>
 
@@ -107,12 +115,19 @@ export function PrivacyPage() {
             </CardHeader>
             <CardContent className="text-muted-foreground space-y-2.5 text-sm leading-relaxed">
               <p>
-                <strong className="text-foreground">Operator / Entity:</strong> [Add your legal
-                name or organization before launch]
+                <strong className="text-foreground">Operator:</strong> Ntare Shema Prince (@nttare0)
               </p>
               <p>
-                <strong className="text-foreground">Support Email:</strong> [Add your real support
-                email before launch]
+                <strong className="text-foreground">Location:</strong> Rwanda
+              </p>
+              <p>
+                <strong className="text-foreground">Support Email:</strong>{" "}
+                <a
+                  href="mailto:nttare0@gmail.com"
+                  className="text-primary underline underline-offset-4 hover:opacity-80"
+                >
+                  nttare0@gmail.com
+                </a>
               </p>
               <p>
                 <strong className="text-foreground">Source Repository:</strong>{" "}

@@ -90,8 +90,8 @@ export function ConsentAnalyticsBanner() {
                 <p className="text-sm font-semibold">Analytics &amp; Privacy Choice</p>
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   We use strictly necessary browser storage for your settings. With your consent, we
-                  also enable privacy-focused Vercel Web Analytics (no ad trackers or PII). Review
-                  this banner text before launch in our{" "}
+                  also enable privacy-focused Vercel Web Analytics (no ad trackers or PII). Read
+                  more in our{" "}
                   <a
                     href="/privacy/#cookies"
                     className="text-foreground underline underline-offset-4 hover:opacity-80"
