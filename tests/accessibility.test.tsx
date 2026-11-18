@@ -62,22 +62,33 @@ describe("HomePage minimalism and site essential links with shadcn/ui", () => {
 });
 
 describe("Legal pages and custom 404 page", () => {
-  it("renders PrivacyPolicy with placeholder warning, local storage disclosures, and non-fabricated contact fields", () => {
+  it("renders PrivacyPolicy with verified GitHub operator details, local storage disclosures, and mailto support link", () => {
     const { container } = render(<PrivacyPage />);
     expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeInTheDocument();
-    expect(screen.getByText(/Placeholder Legal Content — Review Before Launch/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Ntare Shema Prince/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("link", { name: "nttare0@gmail.com" })).toHaveAttribute(
+      "href",
+      "mailto:nttare0@gmail.com",
+    );
     expect(screen.getAllByText(/paperstyle\.settings\.v1/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/paperstyle\.analytics\.consent\.v1/i)).toBeInTheDocument();
-    expect(container.textContent).not.toMatch(/info@example\.com/i);
+    expect(container.textContent).not.toMatch(/info@example\.com|\[Add |Placeholder/i);
   });
 
-  it("renders TermsPage with placeholder warning and non-fabricated contact/governing placeholders", () => {
+  it("renders TermsPage with verified operator, Rwanda governing law, and mailto support link", () => {
     const { container } = render(<TermsPage />);
     expect(
       screen.getByRole("heading", { level: 1, name: /Terms & Conditions/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Placeholder Legal Content — Review Before Launch/i)).toBeInTheDocument();
-    expect(container.textContent).not.toMatch(/info@example\.com/i);
+    expect(screen.getAllByText(/Ntare Shema Prince/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Republic of Rwanda/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "nttare0@gmail.com" })).toHaveAttribute(
+      "href",
+      "mailto:nttare0@gmail.com",
+    );
+    expect(container.textContent).not.toMatch(
+      /info@example\.com|\[Add |\[specify |Placeholder|Operator & Jurisdiction Details/i,
+    );
   });
 
   it("renders branded NotFoundPage with home and studio CTAs", () => {
