@@ -23,14 +23,14 @@ export function NotFoundPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="min-h-11 px-6 font-semibold">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild size="lg" className="min-h-11 w-full px-6 font-semibold sm:w-auto">
                 <a href="/">
                   <Home aria-hidden="true" />
                   <span>Back to Home</span>
                 </a>
               </Button>
-              <Button asChild variant="outline" size="lg" className="min-h-11 px-6">
+              <Button asChild variant="outline" size="lg" className="min-h-11 w-full px-6 sm:w-auto">
                 <a href="/create/">
                   <PenLine aria-hidden="true" />
                   <span>Open Paper Studio</span>

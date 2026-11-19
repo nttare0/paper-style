@@ -157,13 +157,13 @@ export function PaperCreator() {
       </div>
 
       <header
-        className={`no-print sticky top-0 z-30 border-b bg-background/95 backdrop-blur-xs ${
+        className={`no-print sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xs ${
           isEditing ? "hidden" : ""
         }`}
       >
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-6 sm:py-2.5">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <Button asChild variant="outline" size="sm">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-2.5">
+            <Button asChild variant="outline" size="sm" className="min-h-11 sm:min-h-9">
               <a href="/">
                 <ArrowLeft aria-hidden="true" />
                 <span>PaperStyle</span>
@@ -173,14 +173,14 @@ export function PaperCreator() {
             <h1 className="text-base font-bold tracking-tight sm:text-lg">Create Paper</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {!isOnline && (
               <Badge variant="outline" className="gap-1 text-xs">
                 <WifiOff className="size-3" aria-hidden="true" />
                 <span>Offline Ready</span>
               </Badge>
             )}
-            <Badge variant="secondary" className="max-w-[170px] truncate sm:max-w-none">
+            <Badge variant="secondary" className="max-w-[44vw] truncate sm:max-w-none">
               {activeTemplate.name}
             </Badge>
             <Badge variant="outline" className="hidden sm:inline-flex">
@@ -218,7 +218,7 @@ export function PaperCreator() {
         className={
           isEditing
             ? "p-0"
-            : "mx-auto max-w-[1440px] space-y-3 px-3 py-3 pb-20 sm:px-6 md:pb-5"
+            : "mx-auto max-w-[1440px] space-y-3 px-3 py-3 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:px-6 md:pb-6"
         }
       >
         {!isEditing && showInstallHelp && !isInstalled && (
@@ -257,7 +257,7 @@ export function PaperCreator() {
               variant={mobilePane === "customize" ? "default" : "ghost"}
               aria-pressed={mobilePane === "customize"}
               onClick={() => setMobilePane("customize")}
-              className="h-9 text-xs font-semibold"
+              className="min-h-11 text-xs font-semibold"
             >
               <SlidersHorizontal aria-hidden="true" />
               <span>Customize</span>
@@ -268,7 +268,7 @@ export function PaperCreator() {
               variant={mobilePane === "preview" ? "default" : "ghost"}
               aria-pressed={mobilePane === "preview"}
               onClick={() => setMobilePane("preview")}
-              className="h-9 text-xs font-semibold"
+              className="min-h-11 text-xs font-semibold"
             >
               <Eye aria-hidden="true" />
               <span>Sheet Preview</span>
@@ -365,18 +365,18 @@ export function PaperCreator() {
       </div>
 
       {!isEditing && mobilePane === "customize" && (
-        <div className="no-print fixed right-3 bottom-3 left-3 z-20 md:hidden">
-          <div className="mx-auto flex max-w-md items-center justify-between gap-2 rounded-xl border bg-background/95 p-2 shadow-lg backdrop-blur-sm">
-            <div className="min-w-0 pl-1">
+        <div className="no-print fixed inset-x-2.5 bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] z-20 sm:inset-x-3 md:hidden">
+          <div className="mx-auto flex max-w-lg flex-col gap-2 rounded-xl border bg-background/95 p-2 shadow-lg backdrop-blur-sm min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+            <div className="min-w-0 px-1">
               <p className="truncate text-xs font-semibold">{activeTemplate.name}</p>
               <p className="text-muted-foreground truncate text-[11px]">{activeSizeName}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5 min-[420px]:flex min-[420px]:shrink-0 min-[420px]:items-center">
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-9 px-2.5 text-xs"
+                className="min-h-11 px-2 text-xs min-[420px]:px-2.5"
                 onClick={() => {
                   setMobilePane("preview");
                   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -389,7 +389,7 @@ export function PaperCreator() {
                 type="button"
                 size="sm"
                 variant="secondary"
-                className="h-9 px-2.5 text-xs"
+                className="min-h-11 px-2 text-xs min-[420px]:px-2.5"
                 aria-label="Write directly on sheet"
                 onClick={() => setIsEditing(true)}
               >
@@ -399,7 +399,7 @@ export function PaperCreator() {
               <Button
                 type="button"
                 size="sm"
-                className="h-9 px-2.5 text-xs"
+                className="min-h-11 px-2 text-xs min-[420px]:px-2.5"
                 aria-label="Download vector PDF"
                 disabled={hasErrors || exporting !== null}
                 onClick={() =>

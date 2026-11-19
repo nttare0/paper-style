@@ -266,7 +266,7 @@ export function ControlPanel({
     <aside
       id="controls-panel"
       aria-label="Paper Customization Controls"
-      className="no-print w-full md:w-[320px] lg:w-[368px] xl:w-[400px] shrink-0"
+      className="no-print w-full md:w-[clamp(276px,35vw,396px)] shrink-0"
     >
       <Card className="gap-4 py-4">
         <CardHeader className="px-4 pb-0">
@@ -278,16 +278,16 @@ export function ControlPanel({
           </div>
         </CardHeader>
 
-        <CardContent className="@container px-4">
+        <CardContent className="@container px-3.5 sm:px-4">
           <Tabs defaultValue="basics" className="w-full gap-4">
-            <TabsList className="grid h-11 w-full grid-cols-3">
-              <TabsTrigger value="basics" className="h-9 text-xs sm:text-sm">
+            <TabsList className="grid h-12 w-full grid-cols-3">
+              <TabsTrigger value="basics" className="h-10 text-xs sm:text-sm">
                 Basics
               </TabsTrigger>
-              <TabsTrigger value="layout" className="h-9 text-xs sm:text-sm">
+              <TabsTrigger value="layout" className="h-10 text-xs sm:text-sm">
                 Layout
               </TabsTrigger>
-              <TabsTrigger value="extras" className="h-9 text-xs sm:text-sm">
+              <TabsTrigger value="extras" className="h-10 text-xs sm:text-sm">
                 Extras
               </TabsTrigger>
             </TabsList>
@@ -591,10 +591,10 @@ export function ControlPanel({
                 <Label htmlFor="line-spacing-input" className="sr-only">
                   Line Spacing ({settings.units})
                 </Label>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-2 @[250px]:flex-row @[250px]:items-center">
                   <NumericInput
                     id="line-spacing-input"
-                    className="w-24 shrink-0"
+                    className="w-full @[250px]:w-24 shrink-0"
                     step={settings.units === "in" ? "0.01" : "0.5"}
                     aria-invalid={Boolean(errors.lineSpacing)}
                     aria-describedby={errors.lineSpacing ? "line-spacing-err" : undefined}
@@ -652,6 +652,7 @@ export function ControlPanel({
                         disabled={settings.printerType === "bw"}
                         value={settings.lineColor}
                         onChange={(e) => onChange({ ...settings, lineColor: e.target.value })}
+                        className="min-w-0 flex-1"
                       />
                     </div>
                   </div>
@@ -672,6 +673,7 @@ export function ControlPanel({
                         disabled={settings.printerType === "bw"}
                         value={settings.accentColor}
                         onChange={(e) => onChange({ ...settings, accentColor: e.target.value })}
+                        className="min-w-0 flex-1"
                       />
                     </div>
                   </div>
@@ -1233,11 +1235,12 @@ export function ControlPanel({
                       <span>Reset</span>
                     </Button>
                   ) : (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Button
                         type="button"
                         variant="destructive"
                         size="sm"
+                        className="min-h-10 sm:min-h-9"
                         onClick={() => {
                           setConfirmingReset(false);
                           onReset();
@@ -1249,6 +1252,7 @@ export function ControlPanel({
                         type="button"
                         variant="ghost"
                         size="sm"
+                        className="min-h-10 sm:min-h-9"
                         onClick={() => setConfirmingReset(false)}
                       >
                         Cancel

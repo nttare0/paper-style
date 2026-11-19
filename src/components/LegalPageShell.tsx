@@ -19,9 +19,9 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-xs">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-20 border-b bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xs">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button asChild variant="outline" size="sm" className="min-h-11 px-3">
               <a href="/">
                 <ArrowLeft aria-hidden="true" />
@@ -29,12 +29,12 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
               </a>
             </Button>
             <Separator orientation="vertical" className="hidden h-5 sm:block" />
-            <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
+            <nav aria-label="Primary" className="flex flex-wrap items-center gap-1">
               <Button
                 asChild
                 variant={currentPath === "/privacy/" ? "secondary" : "ghost"}
                 size="sm"
-                className="min-h-11 px-3"
+                className="min-h-11 px-2.5 sm:px-3"
               >
                 <a
                   href="/privacy/"
@@ -47,7 +47,7 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
                 asChild
                 variant={currentPath === "/terms/" ? "secondary" : "ghost"}
                 size="sm"
-                className="min-h-11 px-3"
+                className="min-h-11 px-2.5 sm:px-3"
               >
                 <a
                   href="/terms/"
@@ -59,7 +59,7 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
             </nav>
           </div>
 
-          <Button asChild size="sm" className="min-h-11 px-4 font-semibold">
+          <Button asChild size="sm" className="min-h-11 shrink-0 px-3.5 font-semibold sm:px-4">
             <a href="/create/">Create Paper</a>
           </Button>
         </div>
@@ -68,12 +68,12 @@ export function LegalPageShell({ currentPath, children }: LegalPageShellProps) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
+        className="mx-auto w-full min-w-0 max-w-4xl flex-1 px-3 py-6 sm:px-6 sm:py-12"
       >
         {children}
       </main>
 
-      <footer className="border-t px-4 py-4 sm:px-6">
+      <footer className="border-t px-3 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6">
         <nav
           aria-label="Footer"
           className="text-muted-foreground mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs"

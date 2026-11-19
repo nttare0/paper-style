@@ -81,10 +81,9 @@ export function ConsentAnalyticsBanner() {
       {isOpen && (
         <aside
           aria-label="Analytics consent"
-          className="fixed inset-x-4 bottom-4 z-40 sm:left-auto sm:w-full sm:max-w-md"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] z-40 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-full sm:max-w-md"
         >
-          <Card className="border-border/90 bg-background/95 py-4 shadow-lg backdrop-blur-xs">
+          <Card className="border-border/90 bg-background/95 max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain py-4 shadow-lg backdrop-blur-xs">
             <CardContent className="space-y-3 px-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold">Analytics &amp; Privacy Choice</p>
@@ -106,7 +105,7 @@ export function ConsentAnalyticsBanner() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="min-h-11 flex-1 font-medium"
+                  className="min-h-11 min-w-0 flex-1 whitespace-normal py-2 text-center font-medium"
                   onClick={() => handleDecision("rejected")}
                 >
                   Reject analytics
@@ -115,7 +114,7 @@ export function ConsentAnalyticsBanner() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="min-h-11 flex-1 font-medium"
+                  className="min-h-11 min-w-0 flex-1 whitespace-normal py-2 text-center font-medium"
                   onClick={() => handleDecision("accepted")}
                 >
                   Accept analytics
