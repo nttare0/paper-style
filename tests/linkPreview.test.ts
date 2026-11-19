@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -109,5 +109,21 @@ describe("Web link preview, site essentials, favicon preservation, and security 
     expect(headerMap.get("X-Content-Type-Options")).toBe("nosniff");
     expect(headerMap.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
     expect(headerMap.get("Permissions-Policy")).toContain("camera=()");
+  });
+
+  it("includes compressed WebP landing-page photos under public/images and Unsplash credits", () => {
+    expect(existsSync(resolve(ROOT, "CREDITS.md"))).toBe(true);
+    const credits = readFileSync(resolve(ROOT, "CREDITS.md"), "utf8");
+
+    for (const file of [
+      "public/images/graphing-notebook.webp",
+      "public/images/sheet-music-score.webp",
+      "public/images/calligraphy-grid-sheets.webp",
+    ]) {
+      const fullPath = resolve(ROOT, file);
+      expect(existsSync(fullPath)).toBe(true);
+      expect(statSync(fullPath).size).toBeLessThan(200 * 1024);
+      expect(credits).toContain(file);
+    }
   });
 });
