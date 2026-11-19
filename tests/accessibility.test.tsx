@@ -91,6 +91,11 @@ describe("HomePage landing experience, template explorer, real imagery, and cons
     fireEvent.keyDown(window, { key: "Escape" });
     expect(menuToggle).toHaveAttribute("aria-expanded", "false");
 
+    // 6b. Responsive grids, fluid hero typography, and touch-safe targets
+    expect(screen.getByRole("heading", { level: 1 }).className).toContain("clamp(");
+    expect(menuToggle.className).toContain("min-h-11");
+    expect(container.querySelector('[role="tablist"]')?.className).toContain("grid-cols-2");
+
     // 7. Footer legal & verified support links + consent-gated analytics
     expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
       "href",
@@ -303,6 +308,9 @@ describe("PaperCreator 3-tab shadcn/ui studio & Interactive Flow", () => {
     // Mobile switcher toggles active pane cleanly without hiding controls from desktop/a11y tree
     const customizeBtn = screen.getByRole("button", { name: "Customize" });
     const previewBtn = screen.getByRole("button", { name: "Sheet Preview" });
+    expect(customizeBtn).toHaveClass("min-h-11");
+    expect(previewBtn).toHaveClass("min-h-11");
+    expect(document.getElementById("controls-panel")?.className).toContain("clamp(276px,35vw,396px)");
     expect(customizeBtn).toHaveAttribute("aria-pressed", "true");
     expect(previewBtn).toHaveAttribute("aria-pressed", "false");
 

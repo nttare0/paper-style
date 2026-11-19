@@ -242,7 +242,18 @@ export function HomePage() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    let mq: MediaQueryList | null = null;
+    const handleResize = () => {
+      if (mq?.matches) setMobileMenuOpen(false);
+    };
+    if (typeof window.matchMedia === "function") {
+      mq = window.matchMedia("(min-width: 768px)");
+      mq.addEventListener?.("change", handleResize);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      mq?.removeEventListener?.("change", handleResize);
+    };
   }, [mobileMenuOpen]);
 
   const templatesByCategory = useMemo(() => {
@@ -273,6 +284,8 @@ export function HomePage() {
     };
   }, [heroTemplateId, heroThemeId]);
 
+  const heroAspectRatio = heroMetrics.widthMm / heroMetrics.heightMm;
+
   return (
     <div className="bg-background text-foreground flex min-h-dvh flex-col">
       <a
@@ -282,13 +295,13 @@ export function HomePage() {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-xs">
-        <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
-          <div className="flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xs">
+        <div className="mx-auto max-w-6xl px-3 py-2.5 sm:px-6">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
             <a
               href="/"
               aria-current="page"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2.5 rounded-md pr-2 text-base font-bold tracking-tight"
+              className="inline-flex min-h-11 min-w-0 shrink items-center gap-2 rounded-md pr-1 text-base font-bold tracking-tight sm:gap-2.5 sm:pr-2"
             >
               <svg
                 aria-hidden="true"
@@ -343,10 +356,10 @@ export function HomePage() {
                   strokeLinecap="round"
                 />
               </svg>
-              <span>PaperStyle</span>
+              <span className="truncate">PaperStyle</span>
             </a>
 
-            <nav aria-label="Primary" className="flex items-center gap-2">
+            <nav aria-label="Primary" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <ul
                 id="primary-nav-list"
                 className="hidden items-center gap-1 md:flex"
@@ -389,7 +402,7 @@ export function HomePage() {
               <Button
                 asChild
                 size="sm"
-                className="min-h-11 shrink-0 px-3.5 text-sm font-semibold sm:px-4"
+                className="min-h-11 shrink-0 px-3 text-sm font-semibold sm:px-4"
               >
                 <a href="/create/">Create Paper</a>
               </Button>
@@ -417,7 +430,7 @@ export function HomePage() {
           {mobileMenuOpen && (
             <div
               id="mobile-nav-drawer"
-              className="mt-2.5 border-t pt-2.5 md:hidden"
+              className="mt-2.5 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t pt-2.5 md:hidden"
             >
               <ul className="grid gap-1">
                 <li>
@@ -467,16 +480,19 @@ export function HomePage() {
       <main id="main-content" tabIndex={-1} className="flex-1">
         {/* Hero: Above-the-fold headline, CTA, and interactive live sheet specimen */}
         <section className="border-b bg-gradient-to-b from-muted/40 via-background to-background">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-12 lg:gap-10 lg:py-14">
-            <div className="min-w-0 space-y-5 lg:col-span-6">
-              <Badge variant="outline" className="gap-1.5 px-3 py-1 text-xs font-medium">
-                <Sparkles className="size-3.5" aria-hidden="true" />
+          <div className="mx-auto grid max-w-6xl items-center gap-6 px-3 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:grid-cols-12 lg:gap-10 lg:py-14">
+            <div className="min-w-0 space-y-4 sm:space-y-5 lg:col-span-6">
+              <Badge
+                variant="outline"
+                className="max-w-full whitespace-normal gap-1.5 px-3 py-1 text-left text-xs font-medium leading-snug"
+              >
+                <Sparkles className="size-3.5 shrink-0" aria-hidden="true" />
                 <span>77 templates · 10 paper sizes · Browser-local</span>
               </Badge>
 
               <h1
                 id="hero-title"
-                className="text-[clamp(2rem,1.35rem+2.5vw,3.35rem)] leading-[1.08] font-bold tracking-tight"
+                className="text-[clamp(1.75rem,1.25rem+2.2vw,3.25rem)] leading-[1.08] font-bold tracking-tight"
               >
                 Custom printable paper, ready to write and export.
               </h1>
@@ -487,11 +503,11 @@ export function HomePage() {
                 print-ready PDF, SVG, PNG, or DOCX—free and private in your browser.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3 pt-1">
+              <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button
                   asChild
                   size="lg"
-                  className="min-h-12 px-7 text-base font-semibold"
+                  className="min-h-12 w-full px-7 text-base font-semibold sm:w-auto"
                 >
                   <a href="/create/">
                     <span>Create Paper</span>
@@ -503,26 +519,26 @@ export function HomePage() {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="min-h-12 px-6 text-base"
+                  className="min-h-12 w-full px-6 text-base sm:w-auto"
                 >
                   <a href="#templates">Browse 77 Templates</a>
                 </Button>
               </div>
 
               <ul className="grid grid-cols-1 gap-x-4 gap-y-2 pt-2 text-sm text-muted-foreground sm:grid-cols-2">
-                <li className="flex items-center gap-2">
+                <li className="flex min-w-0 items-center gap-2">
                   <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
                   <span>13 curated themes + B&amp;W laser mode</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex min-w-0 items-center gap-2">
                   <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
                   <span>Full-screen typing inside sheets</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex min-w-0 items-center gap-2">
                   <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
                   <span>Up to 100 double-sided pages</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex min-w-0 items-center gap-2">
                   <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
                   <span>Zero sign-up, zero server uploads</span>
                 </li>
@@ -531,25 +547,29 @@ export function HomePage() {
 
             <div className="min-w-0 lg:col-span-6">
               <Card className="overflow-hidden border-border/90 py-0 shadow-sm">
-                <CardHeader className="border-b bg-muted/35 px-4 py-3.5 sm:px-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardHeader className="border-b bg-muted/35 px-3.5 py-3 sm:px-5 sm:py-3.5">
+                  <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                     <div className="min-w-0">
                       <CardTitle className="text-sm sm:text-base">
                         Live Specimen Preview
                       </CardTitle>
-                      <CardDescription className="text-xs">
+                      <CardDescription className="text-xs leading-snug">
                         {heroTemplateSpec.name} · {heroThemeSpec.name} · {heroMetrics.widthMm} ×{" "}
                         {heroMetrics.heightMm} mm ({heroMetrics.orientation})
                       </CardDescription>
                     </div>
-                    <Badge variant="secondary" className="tabular-nums">
+                    <Badge variant="secondary" className="shrink-0 tabular-nums">
                       {heroMetrics.rows} rows · {heroMetrics.stepMm} mm
                     </Badge>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4 p-4 sm:p-5">
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sample paper templates">
+                <CardContent className="space-y-4 p-3.5 sm:p-5">
+                  <div
+                    className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap"
+                    role="group"
+                    aria-label="Sample paper templates"
+                  >
                     {HERO_TEMPLATES.map((item) => {
                       const active = heroTemplateId === item.id;
                       return (
@@ -560,7 +580,7 @@ export function HomePage() {
                           variant={active ? "default" : "outline"}
                           aria-pressed={active}
                           onClick={() => setHeroTemplateId(item.id)}
-                          className="min-h-9 px-3 text-xs"
+                          className="min-h-11 min-w-0 whitespace-normal px-2.5 py-1.5 text-center text-xs leading-tight sm:min-h-10 sm:px-3"
                         >
                           {item.label}
                         </Button>
@@ -568,14 +588,12 @@ export function HomePage() {
                     })}
                   </div>
 
-                  <div className="studio-mat flex items-center justify-center rounded-lg border p-4 sm:p-6">
+                  <div className="studio-mat flex items-center justify-center rounded-lg border p-3 sm:p-5">
                     <div
-                      className={cn(
-                        "w-full",
-                        heroMetrics.orientation === "Landscape"
-                          ? "max-w-[340px]"
-                          : "max-w-[235px] sm:max-w-[260px]",
-                      )}
+                      className="flex w-full justify-center"
+                      style={{
+                        width: `min(100%, calc(min(44dvh, 360px) * ${heroAspectRatio.toFixed(4)}))`,
+                      }}
                     >
                       <LandingSheetPreview
                         templateId={heroTemplateId}
@@ -585,9 +603,9 @@ export function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2.5">
                     <div
-                      className="flex flex-wrap items-center gap-1.5"
+                      className="flex w-full flex-wrap items-center gap-1.5"
                       role="group"
                       aria-label="Paper color themes"
                     >
@@ -604,7 +622,7 @@ export function HomePage() {
                             aria-pressed={active}
                             onClick={() => setHeroThemeId(theme.id)}
                             className={cn(
-                              "inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                              "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors sm:min-h-9 sm:px-2.5",
                               active
                                 ? "border-foreground bg-secondary text-foreground font-semibold"
                                 : "border-border bg-background text-muted-foreground hover:text-foreground",
@@ -612,7 +630,7 @@ export function HomePage() {
                           >
                             <span
                               aria-hidden="true"
-                              className="size-3 rounded-full border border-black/25"
+                              className="size-3 shrink-0 rounded-full border border-black/25"
                               style={{ backgroundColor: theme.swatch }}
                             />
                             <span>{theme.label}</span>
@@ -630,10 +648,10 @@ export function HomePage() {
         {/* Section 2: Interactive 6-category Template Explorer (all 77 real templates) */}
         <section
           id="templates"
-          className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16"
+          className="mx-auto max-w-6xl px-3 py-10 sm:px-6 sm:py-16"
         >
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Badge variant="outline">Template Catalog</Badge>
               <h2
                 id="templates-heading"
@@ -653,15 +671,15 @@ export function HomePage() {
             onValueChange={(value) => setActiveCategory(value as PaperCategory)}
             className="space-y-6"
           >
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1.5 bg-muted/60 p-1.5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1.5 bg-muted/60 p-1.5 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-start">
               {CATEGORY_ORDER.map((cat) => (
                 <TabsTrigger
                   key={cat.id}
                   value={cat.id}
-                  className="min-h-10 flex-initial px-3 py-1.5 text-xs sm:text-sm"
+                  className="min-h-11 w-full justify-between px-2.5 py-1.5 text-xs sm:justify-center sm:px-3 sm:text-sm lg:w-auto lg:flex-initial"
                 >
-                  <span>{cat.shortLabel}</span>
-                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[11px] tabular-nums">
+                  <span className="truncate">{cat.shortLabel}</span>
+                  <Badge variant="secondary" className="ml-1 shrink-0 px-1.5 py-0 text-[11px] tabular-nums">
                     {templatesByCategory[cat.id].length}
                   </Badge>
                 </TabsTrigger>
@@ -672,25 +690,25 @@ export function HomePage() {
               const items = templatesByCategory[cat.id];
               const spotlightId = selectedByCategory[cat.id];
               const spotlight = getTemplateSpec(spotlightId);
+              const spotlightAspect =
+                spotlight.defaultOrientation === "landscape" ? 297 / 210 : 210 / 297;
 
               return (
                 <TabsContent key={cat.id} value={cat.id} className="space-y-6">
                   <Card className="overflow-hidden border-border/90 py-0">
-                    <div className="grid items-center gap-6 p-4 sm:p-6 lg:grid-cols-12">
-                      <div className="studio-mat flex items-center justify-center rounded-lg border p-4 lg:col-span-5">
+                    <div className="grid items-center gap-5 p-3.5 sm:gap-6 sm:p-6 md:grid-cols-12">
+                      <div className="studio-mat flex items-center justify-center rounded-lg border p-4 md:col-span-5">
                         <div
-                          className={cn(
-                            "w-full",
-                            spotlight.defaultOrientation === "landscape"
-                              ? "max-w-[290px]"
-                              : "max-w-[190px]",
-                          )}
+                          className="flex w-full justify-center"
+                          style={{
+                            width: `min(100%, calc(min(36dvh, 270px) * ${spotlightAspect.toFixed(4)}))`,
+                          }}
                         >
                           <LandingSheetPreview templateId={spotlight.id} />
                         </div>
                       </div>
 
-                      <div className="min-w-0 space-y-4 lg:col-span-7">
+                      <div className="min-w-0 space-y-4 md:col-span-7">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">{CATEGORY_LABELS[cat.id]}</Badge>
                           <Badge variant="outline">
@@ -712,7 +730,7 @@ export function HomePage() {
                         </p>
 
                         <div className="flex flex-wrap items-center gap-3 pt-1">
-                          <Button asChild className="min-h-11 px-5 font-semibold">
+                          <Button asChild className="min-h-11 w-full px-5 font-semibold sm:w-auto">
                             <a href="/create/">
                               <span>Create Paper</span>
                               <ArrowRight aria-hidden="true" />
@@ -726,16 +744,17 @@ export function HomePage() {
                     </div>
                   </Card>
 
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17.5rem),1fr))] gap-4">
                     {items.map((tpl) => {
                       const isSelected = spotlight.id === tpl.id;
                       const isLandscape = tpl.defaultOrientation === "landscape";
+                      const cardAspect = isLandscape ? 297 / 210 : 210 / 297;
 
                       return (
                         <Card
                           key={tpl.id}
                           className={cn(
-                            "justify-between gap-4 py-4 transition-colors",
+                            "min-w-0 justify-between gap-4 py-4 transition-colors",
                             isSelected
                               ? "border-foreground ring-1 ring-foreground/20"
                               : "hover:border-foreground/40",
@@ -744,19 +763,16 @@ export function HomePage() {
                           <CardHeader className="gap-2 px-4">
                             <div className="studio-mat flex h-44 items-center justify-center rounded-md border p-3">
                               <div
-                                className={cn(
-                                  "flex h-full items-center justify-center",
-                                  isLandscape ? "w-44" : "w-28",
-                                )}
+                                className="flex max-h-full items-center justify-center"
+                                style={{
+                                  width: `min(100%, calc(9rem * ${cardAspect.toFixed(4)}))`,
+                                }}
                               >
-                                <LandingSheetPreview
-                                  templateId={tpl.id}
-                                  className="max-h-36 w-auto object-contain"
-                                />
+                                <LandingSheetPreview templateId={tpl.id} />
                               </div>
                             </div>
                             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                              <CardTitle className="text-base">{tpl.name}</CardTitle>
+                              <CardTitle className="min-w-0 text-base">{tpl.name}</CardTitle>
                               <Badge variant="outline" className="text-[11px] tabular-nums">
                                 {tpl.defaultSpacingMm} mm
                               </Badge>
@@ -799,9 +815,9 @@ export function HomePage() {
         {/* Section 3: Real-world stationery showcases & studio features */}
         <section
           id="features"
-          className="bg-muted/25 py-12 sm:py-16"
+          className="bg-muted/25 py-10 sm:py-16"
         >
-          <div className="mx-auto max-w-6xl space-y-12 px-4 sm:px-6">
+          <div className="mx-auto max-w-6xl space-y-10 px-3 sm:space-y-12 sm:px-6">
             <div className="space-y-2">
               <Badge variant="outline">Print &amp; Studio Craft</Badge>
               <h2
@@ -816,9 +832,9 @@ export function HomePage() {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-6">
               {REAL_PRINT_STORIES.map((story) => (
-                <Card key={story.title} className="overflow-hidden py-0">
+                <Card key={story.title} className="min-w-0 overflow-hidden py-0">
                   <figure>
                     <img
                       src={story.src}
@@ -852,11 +868,11 @@ export function HomePage() {
               <h3 className="text-xl font-bold tracking-tight sm:text-2xl">
                 Everything included in the PaperStyle studio
               </h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-4">
                 {STUDIO_CAPABILITIES.map((cap) => {
                   const Icon = cap.icon;
                   return (
-                    <Card key={cap.title} className="py-4">
+                    <Card key={cap.title} className="min-w-0 py-4">
                       <CardHeader className="gap-2 px-5">
                         <div className="bg-secondary text-foreground flex size-10 items-center justify-center rounded-lg border">
                           <Icon className="size-5" aria-hidden="true" />
@@ -875,7 +891,7 @@ export function HomePage() {
             </div>
 
             <Card className="border-border/90 py-5">
-              <CardHeader className="px-5">
+              <CardHeader className="px-4 sm:px-5">
                 <CardTitle className="text-lg sm:text-xl">
                   Export &amp; print formats generated locally
                 </CardTitle>
@@ -883,16 +899,16 @@ export function HomePage() {
                   No watermarks, no file-size tiers, and zero cloud round-trips.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3 px-5 sm:grid-cols-2 lg:grid-cols-5">
+              <CardContent className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3 px-4 sm:px-5">
                 {EXPORT_FORMATS.map((fmt) => {
                   const Icon = fmt.icon;
                   return (
                     <div
                       key={fmt.name}
-                      className="rounded-lg border bg-muted/30 p-3.5"
+                      className="min-w-0 rounded-lg border bg-muted/30 p-3.5"
                     >
                       <div className="mb-1.5 flex items-center gap-2 font-semibold">
-                        <Icon className="size-4" aria-hidden="true" />
+                        <Icon className="size-4 shrink-0" aria-hidden="true" />
                         <span>{fmt.name}</span>
                       </div>
                       <p className="text-muted-foreground text-xs leading-relaxed">
@@ -909,7 +925,7 @@ export function HomePage() {
         <Separator />
 
         {/* Section 4: Workflow + FAQ */}
-        <section className="mx-auto max-w-6xl space-y-14 px-4 py-12 sm:px-6 sm:py-16">
+        <section className="mx-auto max-w-6xl space-y-12 px-3 py-10 sm:space-y-14 sm:px-6 sm:py-16">
           <div className="space-y-6">
             <div className="space-y-2">
               <Badge variant="outline">Three-step workflow</Badge>
@@ -921,9 +937,9 @@ export function HomePage() {
               </h2>
             </div>
 
-            <ol className="grid gap-4 md:grid-cols-3">
+            <ol className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-4">
               {WORKFLOW_STEPS.map((item) => (
-                <li key={item.step} className="list-none">
+                <li key={item.step} className="min-w-0 list-none">
                   <Card className="h-full py-5">
                     <CardHeader className="px-5">
                       <Badge variant="outline" className="mb-1 font-mono">
@@ -954,11 +970,13 @@ export function HomePage() {
             </div>
 
             <Card className="py-2">
-              <CardContent className="px-5">
+              <CardContent className="px-4 sm:px-5">
                 <Accordion type="single" collapsible defaultValue="free">
                   {FAQS.map((faq) => (
                     <AccordionItem key={faq.id} value={faq.id}>
-                      <AccordionTrigger>{faq.question}</AccordionTrigger>
+                      <AccordionTrigger className="min-h-11 py-3.5 text-sm sm:text-base">
+                        {faq.question}
+                      </AccordionTrigger>
                       <AccordionContent>
                         <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
                       </AccordionContent>
@@ -970,8 +988,8 @@ export function HomePage() {
           </div>
 
           <Card className="studio-mat border-border/90 py-6 sm:py-8">
-            <CardContent className="flex flex-col items-start justify-between gap-5 px-5 sm:flex-row sm:items-center sm:px-8">
-              <div className="space-y-1.5">
+            <CardContent className="flex flex-col items-start justify-between gap-5 px-4 sm:flex-row sm:items-center sm:px-8">
+              <div className="min-w-0 space-y-1.5">
                 <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
                   Ready to design your custom paper?
                 </h2>
@@ -983,7 +1001,7 @@ export function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="min-h-12 shrink-0 px-7 text-base font-semibold"
+                className="min-h-12 w-full shrink-0 px-7 text-base font-semibold sm:w-auto"
               >
                 <a href="/create/">
                   <span>Create Paper</span>
@@ -995,9 +1013,9 @@ export function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t bg-muted/20 px-4 py-6 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row">
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center sm:text-left">
+      <footer className="border-t bg-muted/20 px-3 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground md:flex-row">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center md:text-left">
             <span className="font-semibold text-foreground">PaperStyle</span>
             <span aria-hidden="true">·</span>
             <span>Maintained by Ntare Shema Prince</span>
@@ -1012,7 +1030,7 @@ export function HomePage() {
 
           <nav
             aria-label="Legal and support"
-            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1"
+            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-5"
           >
             <a
               href="/privacy/"

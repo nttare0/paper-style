@@ -432,9 +432,7 @@ export function PaperPreview({
       style={
         isFit
           ? {
-              width: isEditing
-                ? `min(calc(100cqw - 1.5rem), calc((100cqh - 1.5rem) * ${aspectRatio.toFixed(5)}))`
-                : `min(calc(100cqw - 2rem), calc((100cqh - 2rem) * ${aspectRatio.toFixed(5)}))`,
+              width: `min(calc(100cqw - 1.25rem), calc((100cqh - 1.25rem) * ${aspectRatio.toFixed(5)}))`,
               aspectRatio: `${geometry.widthMm} / ${geometry.heightMm}`,
             }
           : {
@@ -606,9 +604,9 @@ export function PaperPreview({
         aria-label={`Full-screen paper editor: ${tpl.name}`}
         className="print-only-main studio-mat fixed inset-0 z-50 flex h-dvh flex-col"
       >
-        <div className="no-print flex shrink-0 justify-center px-2 pt-2 pb-1 sm:px-3 sm:pt-2.5">
+        <div className="no-print flex shrink-0 justify-center px-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-1 sm:px-3 sm:pt-2.5">
           <div
-            className="flex max-h-[28dvh] max-w-full flex-wrap items-center justify-center gap-1.5 overflow-y-auto rounded-2xl border bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur-xs sm:gap-2 sm:rounded-full sm:px-3"
+            className="flex max-h-[30dvh] max-w-full flex-wrap items-center justify-center gap-1.5 overflow-y-auto overscroll-contain rounded-2xl border bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur-xs sm:gap-2 sm:rounded-full sm:px-3"
             role="toolbar"
             aria-label="Full-screen paper editor controls"
           >
@@ -630,7 +628,7 @@ export function PaperPreview({
                       onChange({ ...settings, inkColor: swatch.color }, `Selected ${swatch.label}.`)
                     }
                     className={cn(
-                      "size-6 cursor-pointer rounded-full border transition-transform disabled:opacity-40 sm:size-5",
+                      "size-7 cursor-pointer rounded-full border transition-transform disabled:opacity-40 sm:size-5",
                       active ? "scale-110 ring-2 ring-ring ring-offset-1" : "border-foreground/30",
                     )}
                     style={{ backgroundColor: swatch.color }}
@@ -648,7 +646,7 @@ export function PaperPreview({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "ghost"}
-                    className="h-8 px-2.5 text-xs sm:h-7 sm:px-2"
+                    className="h-9 px-2.5 text-xs sm:h-7 sm:px-2"
                     aria-label={sz.name}
                     aria-pressed={active}
                     onClick={() =>
@@ -671,7 +669,7 @@ export function PaperPreview({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 rounded-full sm:size-6"
+                  className="size-8 rounded-full sm:size-6"
                   aria-label="Previous preview page"
                   disabled={safePage <= 1}
                   onClick={() => {
@@ -688,7 +686,7 @@ export function PaperPreview({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 rounded-full sm:size-6"
+                  className="size-8 rounded-full sm:size-6"
                   aria-label="Next preview page"
                   disabled={safePage >= totalPages}
                   onClick={() => {
@@ -719,7 +717,7 @@ export function PaperPreview({
                   type="button"
                   size="sm"
                   variant={zoom === z.id ? "default" : "ghost"}
-                  className="h-7 rounded-full px-2 text-xs sm:h-6"
+                  className="h-8 rounded-full px-2.5 text-xs sm:h-6 sm:px-2"
                   aria-pressed={zoom === z.id}
                   onClick={() => setZoom(z.id)}
                 >
@@ -733,7 +731,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-8 px-2 text-xs sm:h-7"
+                className="h-9 px-2.5 text-xs sm:h-7 sm:px-2"
                 onClick={clearCurrentPage}
               >
                 <Eraser className="size-3.5" aria-hidden="true" />
@@ -744,7 +742,7 @@ export function PaperPreview({
             <Button
               type="button"
               size="sm"
-              className="h-8 rounded-full px-3 text-xs sm:h-7"
+              className="h-9 rounded-full px-3 text-xs sm:h-7"
               title="Exit full-screen edit (Esc)"
               onClick={exitEditMode}
             >
@@ -764,7 +762,7 @@ export function PaperPreview({
         >
           {sheetElement}
           {supportsFreeClick && pageBlocks.length === 0 && (
-            <div className="no-print pointer-events-none fixed bottom-4 left-1/2 max-w-[90vw] -translate-x-1/2 truncate rounded-full border bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-xs backdrop-blur-xs">
+            <div className="no-print pointer-events-none fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] left-1/2 max-w-[calc(100vw-2rem)] -translate-x-1/2 truncate rounded-full border bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-xs backdrop-blur-xs">
               Click or tap anywhere on the sheet to write
             </div>
           )}
@@ -791,10 +789,10 @@ export function PaperPreview({
   return (
     <main
       id="preview-main"
-      className="print-only-main min-w-0 flex-1 md:sticky md:top-14"
+      className="print-only-main min-w-0 flex-1 md:sticky md:top-16"
     >
-      <Card className="print-card gap-3 py-3.5">
-        <CardHeader className="no-print border-b px-3.5 pb-3 sm:px-4">
+      <Card className="print-card gap-3 py-3.5 md:flex md:h-[min(calc(100dvh-5rem),980px)] md:flex-col">
+        <CardHeader className="no-print shrink-0 border-b px-3.5 pb-3 sm:px-4">
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -826,7 +824,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="secondary"
-                className="h-9 px-3 text-xs font-semibold sm:h-8 sm:px-2.5"
+                className="min-h-10 px-3 text-xs font-semibold sm:min-h-8 sm:h-8 sm:px-2.5"
                 onClick={() => enterEditMode()}
               >
                 <PenLine aria-hidden="true" />
@@ -843,7 +841,7 @@ export function PaperPreview({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-8 sm:size-7"
+                    className="size-9 sm:size-7"
                     aria-label="Previous preview page"
                     disabled={safePage <= 1}
                     onClick={() => setPageIndex(safePage - 1)}
@@ -857,7 +855,7 @@ export function PaperPreview({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-8 sm:size-7"
+                    className="size-9 sm:size-7"
                     aria-label="Next preview page"
                     disabled={safePage >= totalPages}
                     onClick={() => setPageIndex(safePage + 1)}
@@ -885,7 +883,7 @@ export function PaperPreview({
                     type="button"
                     size="sm"
                     variant={zoom === z.id ? "default" : "ghost"}
-                    className="h-8 px-2 text-xs sm:h-7"
+                    className="h-9 px-2.5 text-xs sm:h-7 sm:px-2"
                     aria-pressed={zoom === z.id}
                     onClick={() => setZoom(z.id)}
                   >
@@ -897,9 +895,9 @@ export function PaperPreview({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3 px-3.5 sm:px-4">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-3 px-3.5 sm:px-4">
           <div
-            className={`print-stage studio-mat flex h-[48dvh] min-h-[260px] max-h-[540px] rounded-lg border p-2.5 sm:p-4 md:h-[calc(100dvh-14.5rem)] md:min-h-[380px] md:max-h-[920px] ${
+            className={`print-stage studio-mat flex h-[clamp(250px,54dvh,540px)] rounded-lg border p-2.5 sm:p-4 md:h-auto md:min-h-[220px] md:flex-1 ${
               isFit
                 ? "items-center justify-center overflow-hidden"
                 : "items-start justify-start overflow-auto"
@@ -925,7 +923,7 @@ export function PaperPreview({
           )}
 
           <div
-            className="no-print flex flex-wrap items-center justify-between gap-2"
+            className="no-print flex shrink-0 flex-wrap items-center justify-between gap-2"
             role="group"
             aria-label="Export and print actions"
           >
@@ -933,7 +931,7 @@ export function PaperPreview({
               <Button
                 type="button"
                 size="sm"
-                className="h-9 sm:h-8"
+                className="min-h-10 sm:min-h-8 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={onExportPdf}
               >
@@ -944,7 +942,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-9 sm:h-8"
+                className="min-h-10 sm:min-h-8 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={() => onExportSvg(safePage)}
               >
@@ -955,7 +953,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-9 sm:h-8"
+                className="min-h-10 sm:min-h-8 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={() => onExportPng(safePage)}
               >
@@ -966,7 +964,7 @@ export function PaperPreview({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-9 sm:h-8"
+                className="min-h-10 sm:min-h-8 sm:h-8"
                 disabled={hasErrors || exporting !== null}
                 onClick={onExportDocx}
               >
@@ -979,7 +977,7 @@ export function PaperPreview({
               type="button"
               size="sm"
               variant="secondary"
-              className="h-9 sm:h-8"
+              className="min-h-10 sm:min-h-8 sm:h-8"
               disabled={hasErrors}
               onClick={handlePrint}
             >

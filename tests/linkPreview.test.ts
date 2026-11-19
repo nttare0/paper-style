@@ -81,6 +81,8 @@ describe("Web link preview, site essentials, favicon preservation, and security 
       expect(html).toContain('rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"');
       expect(html).not.toContain("favicon.ico");
       expect(html).toContain('rel="manifest" href="/manifest.webmanifest"');
+      expect(html).toContain("viewport-fit=cover");
+      expect(html).toContain('name="text-scale" content="scale"');
     }
 
     expect(titles.size).toBe(4);
@@ -90,6 +92,8 @@ describe("Web link preview, site essentials, favicon preservation, and security 
     expect(notFoundHtml).toContain("<title>Page Not Found — PaperStyle</title>");
     expect(notFoundHtml).toContain('name="robots" content="noindex"');
     expect(notFoundHtml).toContain('rel="icon" type="image/svg+xml" href="/favicon.svg"');
+    expect(notFoundHtml).toContain("viewport-fit=cover");
+    expect(notFoundHtml).toContain('name="text-scale" content="scale"');
     expect(notFoundHtml).not.toContain("favicon.ico");
   });
 

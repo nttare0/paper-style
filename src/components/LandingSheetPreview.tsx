@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useMemo } from "react";
 import { applyTemplateDefaults, DEFAULT_PAPER_SETTINGS, getTemplateSpec } from "@/data/templates";
 import { getThemeSpec } from "@/data/themes";
@@ -27,6 +28,7 @@ interface LandingSheetPreviewProps {
   templateId: PaperTypeId;
   themeId?: ThemeId;
   className?: string;
+  style?: CSSProperties;
   alt?: string;
   priority?: boolean;
 }
@@ -35,6 +37,7 @@ export function LandingSheetPreview({
   templateId,
   themeId = "default",
   className,
+  style,
   alt,
   priority = false,
 }: LandingSheetPreviewProps) {
@@ -72,7 +75,10 @@ export function LandingSheetPreview({
         "block h-auto w-full rounded-sm bg-white ring-1 ring-black/10",
         className,
       )}
-      style={{ aspectRatio: `${preview.widthMm} / ${preview.heightMm}` }}
+      style={{
+        aspectRatio: `${preview.widthMm} / ${preview.heightMm}`,
+        ...style,
+      }}
     />
   );
 }
