@@ -13,51 +13,120 @@ beforeEach(() => {
     .forEach((el) => el.remove());
 });
 
-describe("HomePage minimalism and site essential links with shadcn/ui", () => {
-  it("renders centered PaperStyle hero CTA above the fold, footer links, and consent-gated analytics banner", () => {
+describe("HomePage landing experience, template explorer, real imagery, and consent-gated analytics", () => {
+  it("renders accessible landmarks, hero CTA, interactive live preview, 77-template tabs, FAQ, real images, and footer links", () => {
     const { container } = render(<HomePage />);
-    const heading = screen.getByRole("heading", { level: 1, name: "PaperStyle" });
-    const createLink = screen.getByRole("link", { name: "Create Paper" });
-    const privacyLink = screen.getByRole("link", { name: "Privacy Policy" });
-    const termsLink = screen.getByRole("link", { name: "Terms & Conditions" });
-    const contactLink = screen.getByRole("link", { name: "Contact" });
-    const cookieSettingsBtn = screen.getByRole("button", { name: "Cookie Settings" });
 
-    expect(heading).toBeInTheDocument();
-    expect(createLink).toHaveAttribute("href", "/create/");
-    expect(createLink).toHaveAttribute("data-slot", "button");
-    expect(privacyLink).toHaveAttribute("href", "/privacy/");
-    expect(termsLink).toHaveAttribute("href", "/terms/");
-    expect(contactLink).toHaveAttribute("href", "/privacy/#contact");
+    // 1. Landmarks & strictly one h1 with non-skipped heading hierarchy
+    const h1s = container.querySelectorAll("h1");
+    expect(h1s).toHaveLength(1);
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: /Custom printable paper, ready to write and export/i,
+      }),
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll("header")).toHaveLength(1);
+    expect(container.querySelectorAll("main")).toHaveLength(1);
+    expect(container.querySelectorAll("footer")).toHaveLength(1);
+
+    const headingLevels = Array.from(
+      container.querySelectorAll("h1, h2, h3, h4, h5, h6"),
+    ).map((el) => Number(el.tagName.slice(1)));
+    for (let i = 1; i < headingLevels.length; i++) {
+      expect(headingLevels[i]! - headingLevels[i - 1]!).toBeLessThanOrEqual(1);
+    }
+
+    // 2. Consistent Create Paper CTAs targeting /create/
+    const createLinks = screen.getAllByRole("link", { name: "Create Paper" });
+    expect(createLinks.length).toBeGreaterThanOrEqual(3);
+    for (const link of createLinks) {
+      expect(link).toHaveAttribute("href", "/create/");
+      expect(link).toHaveAttribute("data-slot", "button");
+    }
+
+    // 3. Interactive Hero live sheet & theme preview updates vector specimen
+    expect(
+      screen.getByRole("img", {
+        name: /Cornell Notes printable paper preview in Classic/i,
+      }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Weekly Planner" }));
+    expect(
+      screen.getByRole("img", {
+        name: /Weekly Planner printable paper preview in Classic/i,
+      }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Apply Sepia theme to preview" }));
+    expect(
+      screen.getByRole("img", {
+        name: /Weekly Planner printable paper preview in Sepia/i,
+      }),
+    ).toBeInTheDocument();
+
+    // 4. Interactive 6-category template catalog
+    const musicTab = screen.getByRole("tab", { name: /Music/i });
+    fireEvent.mouseDown(musicTab, { button: 0 });
+    fireEvent.click(musicTab);
+    fireEvent.click(screen.getByRole("button", { name: "Preview Bass Tab" }));
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Bass Tab" }),
+    ).toBeInTheDocument();
+
+    // 5. Real compressed WebP photos with explicit dimensions and alt text
+    const photoImgs = Array.from(
+      container.querySelectorAll<HTMLImageElement>('img[src^="/images/"]'),
+    );
+    expect(photoImgs).toHaveLength(3);
+    for (const img of photoImgs) {
+      expect(img.getAttribute("alt")?.trim().length).toBeGreaterThan(15);
+      expect(img).toHaveAttribute("width", "1200");
+      expect(img).toHaveAttribute("height", "800");
+    }
+
+    // 6. Mobile menu drawer toggles cleanly and closes on Escape
+    const menuToggle = screen.getByRole("button", { name: /Open navigation menu/i });
+    fireEvent.click(menuToggle);
+    expect(menuToggle).toHaveAttribute("aria-expanded", "true");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(menuToggle).toHaveAttribute("aria-expanded", "false");
+
+    // 7. Footer legal & verified support links + consent-gated analytics
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
+      "href",
+      "/privacy/",
+    );
+    expect(screen.getByRole("link", { name: "Terms & Conditions" })).toHaveAttribute(
+      "href",
+      "/terms/",
+    );
+    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute(
+      "href",
+      "/privacy/#contact",
+    );
+    expect(screen.getByRole("link", { name: "nttare0@gmail.com" })).toHaveAttribute(
+      "href",
+      "mailto:nttare0@gmail.com",
+    );
+    const cookieSettingsBtn = screen.getByRole("button", { name: "Cookie Settings" });
     expect(cookieSettingsBtn).toBeInTheDocument();
 
-    // Analytics script must NOT load before explicit consent
-    expect(
-      document.head.querySelector('script[src*="vercel"]'),
-    ).toBeNull();
-
-    // Consent banner offers equal-prominence Reject and Accept controls
+    expect(document.head.querySelector('script[src*="vercel"]')).toBeNull();
     const consentRegion = screen.getByRole("complementary", { name: "Analytics consent" });
     const rejectBtn = screen.getByRole("button", { name: "Reject analytics" });
     const acceptBtn = screen.getByRole("button", { name: "Accept analytics" });
     expect(consentRegion).toBeInTheDocument();
     expect(rejectBtn.getAttribute("data-variant")).toBe(acceptBtn.getAttribute("data-variant"));
 
-    // Rejecting closes banner without injecting analytics
     fireEvent.click(rejectBtn);
     expect(screen.queryByRole("complementary", { name: "Analytics consent" })).not.toBeInTheDocument();
     expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("rejected");
     expect(document.head.querySelector('script[src*="vercel"]')).toBeNull();
 
-    // Reopening via Cookie Settings and accepting injects analytics script
     fireEvent.click(cookieSettingsBtn);
     fireEvent.click(screen.getByRole("button", { name: "Accept analytics" }));
     expect(window.localStorage.getItem("paperstyle.analytics.consent.v1")).toBe("accepted");
     expect(document.head.querySelector('script[src*="vercel"]')).not.toBeNull();
-
-    expect(container.querySelectorAll("h1, h2, h3, h4, h5, h6")).toHaveLength(1);
-    expect(container.querySelectorAll("main")).toHaveLength(1);
-    expect(container.querySelectorAll("footer")).toHaveLength(1);
   });
 });
 
